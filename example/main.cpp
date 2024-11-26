@@ -6,6 +6,8 @@
 #include <termios.h>
 #include <unistd.h>
 #include <cstring>
+#include "../lib/inc/Menu.hpp"
+#include "../lib/inc/MenuEntity.hpp"
 
 #define STR_TO_LOWER(str)                     \
     do                                        \
@@ -18,16 +20,6 @@ const char *left_key = "\x1b\x5b\x44";
 const char *right_key = "\x1b\x5b\x43";
 
 class Menu;
-
-void clear_line(void)
-{
-    for (size_t i = 0; i < 40 + 2; i++)
-        printf("\b");
-    for (size_t i = 0; i < 40 + 2; i++)
-        printf(" ");
-    for (size_t i = 0; i < 40 + 2; i++)
-        printf("\b");
-}
 
 void set_non_canonical_mode()
 {
@@ -48,70 +40,11 @@ void set_non_canonical_mode()
     tcsetattr(STDIN_FILENO, TCSANOW, &newt);
 }
 
-class MenuEntity
-{
-public:
-    MenuEntity(std::string label) : m_Label(label) {};
-
-    // MenuEntity(std::string &label, std::function<void()> func) : m_Label(label), m_Function(func) {};
-
-    ~MenuEntity() {};
-
-    std::string getLabel(void)
-    {
-        return m_Label;
-    }
-
-    std::function<void()> Function(void)
-    {
-        return m_Function;
-    }
-
-    bool operator==(const MenuEntity &other) const
-    {
-        // Compare the string and the result of the function
-        return (m_Label == other.m_Label);
-    }
-
-private:
-    std::string m_Label;
-    std::function<void()> m_Function;
-    Menu *m_Submenu;
-};
-
-class Menu
-{
-
-public:
-    void printEntities(std::string &prefix)
-    {
-        for (auto &entity : m_Entities)
-        {
-            if (entity.getLabel().find(prefix) == 0)
-                printf("\t%s\n", entity.getLabel().c_str());
-        }
-    }
-
-    std::vector<MenuEntity> m_Entities;
-
-    MenuEntity *getElement(std::string label)
-    {
-        for (auto &element : m_Entities)
-        {
-            if (element.getLabel() == label)
-                return &element;
-        }
-
-        return nullptr;
-    }
-};
-
 void handle_special_chars(size_t &index, std::string &input)
 {
     if (input == std::string(left_key))
     {
         for (size_t i = 0; i < sizeof(left_key); i++)
-            ;
         input.pop_back();
 
         if (index > 0)
@@ -119,7 +52,7 @@ void handle_special_chars(size_t &index, std::string &input)
             index--;
             printf("\b");
         }
-        clear_line();
+        //clear_line();
         //
 
         return;
@@ -131,12 +64,12 @@ void handle_special_chars(size_t &index, std::string &input)
         input.pop_back();
         if (index < input.size())
             index++;
-        clear_line();
+        //clear_line();
         return;
     }
 }
 
-int try_match(std::string &input, int *index, int *chars_matching, Menu *current_menu)
+int try_match(const std::string &input, int *index, int *chars_matching, Menu *current_menu)
 {
     int match_count = 0;
     std::vector<int> matching_indexes;
@@ -165,55 +98,87 @@ int try_match(std::string &input, int *index, int *chars_matching, Menu *current
     return match_count;
 }
 
-size_t howMuchTheSame(const std::string &prefix, const std::string &base)
+void printTokens(const std::vector<std::string> &tokens)
 {
-    size_t i = 0;
-    for (i = 0; i < prefix.size(); i++)
+    for(auto & token : tokens)
     {
-        if (prefix.at(i) == base.at(i))
-            i++;
-        else
-            break;
+        printf("%s:",token.c_str());
     }
-    return i;
+    printf("\n");
+}
+
+std::vector<std::string> tokenize(const std::string &str)
+{
+    char *token = strtok((char*)str.c_str(), " - ");
+    std::vector<std::string> tokens;
+    while (token != NULL)
+    {
+        int arg_value;
+        sscanf(token, "%d", &arg_value);
+        tokens.push_back(std::string(token));
+        token = strtok(NULL, " ");
+    }
+    return tokens;
 }
 
 int main(int argc, char **argv)
 {
-    Menu main;
+    Menu main("main");
 
     // MenuEntity entajty = MenuEntity(std::string("Ala"));
-    main.m_Entities.emplace_back(MenuEntity("Ala"));
-    main.m_Entities.emplace_back("Ela");
-    main.m_Entities.emplace_back("Urszula");
-    main.m_Entities.emplace_back("Elzbieta");
-    main.m_Entities.emplace_back("Marek");
-    main.m_Entities.emplace_back("Natala");
-    main.m_Entities.emplace_back("Emilia");
-    main.m_Entities.emplace_back("Piotrek");
-    main.m_Entities.emplace_back("Monika");
-    main.m_Entities.emplace_back("Lukasz");
-    main.m_Entities.emplace_back("Mateusz");
-    main.m_Entities.emplace_back("Lechoslaw");
-    main.m_Entities.emplace_back("Anna");
-    main.m_Entities.emplace_back("Grazyna");
-    main.m_Entities.emplace_back("Adam");
-    main.m_Entities.emplace_back("Leszek");
-    main.m_Entities.emplace_back("Marcin");
+    main.m_Entities.emplace_back(MenuEntity("ssaki"));
+    main.m_Entities.emplace_back("gady");
+    main.m_Entities.emplace_back("plazy");
+    main.m_Entities.emplace_back("ryby");
+    main.m_Entities.emplace_back("ptaki");
+    
+    Menu ssaki("ssaki");
+    ssaki.m_Entities.emplace_back("kot");
+    ssaki.m_Entities.emplace_back("pies");
+    ssaki.m_Entities.emplace_back("krowa");
+    ssaki.m_Entities.emplace_back("kon");
 
-    // printf("%lu\n", howMuchTheSame("Ma","Marek"));
+    Menu gady("gady");
+    gady.m_Entities.emplace_back("krokodyl");
+    gady.m_Entities.emplace_back("jaszczurka");
+    gady.m_Entities.emplace_back("waz");
+    gady.m_Entities.emplace_back("zolw");
 
-    // std::string prefix = std::string(argv[1]);
-    // main.printEntities(prefix);
+    Menu plazy("plazy");
+    plazy.m_Entities.emplace_back("zaha");
+    plazy.m_Entities.emplace_back("ropucha");
+    plazy.m_Entities.emplace_back("salamandra");
+
+    Menu ryby("ryby");
+    ryby.m_Entities.emplace_back("okon");
+    ryby.m_Entities.emplace_back("szczupak");
+    ryby.m_Entities.emplace_back("leszcz");
+    ryby.m_Entities.emplace_back("jazgarz");
+
+    Menu ptaki("ptaki");
+    ptaki.m_Entities.emplace_back("mewa");
+    ptaki.m_Entities.emplace_back("golab");
+    ptaki.m_Entities.emplace_back("orzel");
+    ptaki.m_Entities.emplace_back("sroka");
+
+    main.getElement("ssaki")->setSubMenu(&ssaki);
+    main.getElement("gady")->setSubMenu(&gady);
+    main.getElement("plazy")->setSubMenu(&plazy);
+    main.getElement("ryby")->setSubMenu(&ryby);
+    main.getElement("ptaki")->setSubMenu(&ptaki);
+
 
     set_non_canonical_mode();
     std::string input;
     size_t buffer_index = 0;
     int ret = 0;
+
+    Menu *current_menu = &main;
+    //Menu *current_menu = &ptaki;
     while (1)
     {
         if (buffer_index == 0)
-            printf("\r# ");
+            printf("\r%s # ", current_menu->m_Label.c_str());
         char z = getc(stdin);
         {
             // printf("\r%02x\n", z);
@@ -246,44 +211,44 @@ int main(int argc, char **argv)
                 int index2 = -1;
                 int chars_matching = -1;
                 // STR_TO_LOWER(buffer);
-                ret = try_match(input, &index2, &chars_matching, &main);
+                ret = try_match(input, &index2, &chars_matching, current_menu);
 
                 if (ret >= 1)
                 {
-                    // memset(buffer, 0, sizeof(buffer));
                     input.clear();
-                    // chars_matching = strlen(buffer);
                     if (ret == 1)
-                        input = main.m_Entities[index2].getLabel(); // strcpy(buffer, current_menu[index].command);
+                        input = current_menu->m_Entities[index2].getLabel();
                     else
-                        input.assign(main.m_Entities[index2].getLabel(), 0, chars_matching); // strncpy(buffer, current_menu[index].command, chars_matching);
+                        input.assign(current_menu->m_Entities[index2].getLabel(), 0, chars_matching);
                     if (ret == 1)
-                        input.push_back(' ');    // buffer[strlen(buffer)] = ' ';
-                    buffer_index = input.size(); // buffer_index = strlen(buffer);
+                        input.push_back(' ');
+                    buffer_index = input.size();
                 }
-                // printf(".");
             }
 
             if (ret > 0 || z != 9)
             {
-                // if(strcmp(old_buf, buffer) != 0)
-                // {
-                printf("\r# ");
+                printf("\r%s # ", current_menu->m_Label.c_str());
                 printf("%s", input.c_str());
-                // strncpy(old_buf, buffer, TERMINAL_BUFF_SIZE);
-                //}
+              if(input.size() > 2)  
+              {  std::string new_str = input;
+                new_str.pop_back();
+                if(current_menu->getElement(new_str) != nullptr && current_menu->getElement(new_str)->getSubMenu() != nullptr)
+                {
+                  //printf("going to (%s)\n",new_str.c_str());
+                    current_menu = current_menu->getElement(new_str)->getSubMenu();
+                }
+            }  
             }
+
             // handle_special_chars(index, input);
             if (z == 10) // newline //10 in Linux
             {
                 input.pop_back();
-                buffer_index = 0; //--;//[--buffer_index] = 0; // string null termination
-                // newline
-                // buffer_index = 0;
-                input.clear(); // memset(old_buf, 0, sizeof(old_buf));
+                buffer_index = 0;
+                //printTokens(tokenize(input));
+                input.clear();
                 printf("\n\r");
-
-                // return buffer;
             }
         }
     }
