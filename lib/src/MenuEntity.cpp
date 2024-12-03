@@ -5,14 +5,18 @@
 
 MenuEntity::MenuEntity(std::string label) : m_Label(label), m_Submenu(nullptr) {};
 
+MenuEntity::MenuEntity(std::string label, std::function<void()> fun) :  m_Function(fun), m_Label(label)
+{
+
+}
 std::string MenuEntity::getLabel(void)
 {
     return m_Label;
 }
 
-std::function<void()> MenuEntity::Function(void)
+void MenuEntity::Function(void)
 {
-    return m_Function;
+    m_Function();
 }
 
 bool MenuEntity::operator==(const MenuEntity &other) const

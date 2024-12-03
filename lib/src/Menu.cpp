@@ -26,3 +26,19 @@ void Menu::printEntities(std::string &prefix)
             printf("\t%s\n", entity.getLabel().c_str());
     }
 }
+
+void Menu::setParent(Menu* parentMenu)
+{
+    m_Parent = parentMenu;
+}
+
+Menu* Menu::getParent(void)
+{
+    return m_Parent;
+}
+
+MenuEntity& Menu::emplace_back(MenuEntity && other)
+{
+    m_Entities.emplace_back(other);
+    return m_Entities.back();
+}
