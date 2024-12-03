@@ -78,7 +78,7 @@ int try_match(const std::string &input, int *index, int *chars_matching, Menu *c
     std::vector<int> matching_indexes;
     char next_letter = 0;
 
-    for (int i = 0; i < current_menu->m_Entities.size() ; i++)
+    for (int i = 0; i < current_menu->m_Entities.size(); i++)
     {
         if (current_menu->m_Entities[i].getLabel().find(input) == 0)
         {
@@ -137,55 +137,75 @@ void prompt_fun(const std::string &prompt, const std::string &input)
     if (prompt.empty())
         printf("\r# %s", input.c_str());
     else
-        printf("\r# %s%s%s %s", GREEN_COLOR, prompt.c_str(),DEFAULT_COLOR, input.c_str());
+        printf("\r# %s%s%s %s", GREEN_COLOR, prompt.c_str(), DEFAULT_COLOR, input.c_str());
 }
 
-void miau(void)
+std::string find_way_home(Menu* menu)
 {
-    printf("miau\n");
+    std::string label = menu->m_Label;
+    Menu* parentMenu = menu;
+    while(parentMenu->getParent() != nullptr)
+    {
+        parentMenu = parentMenu->getParent();
+        if(parentMenu->getParent() != nullptr)
+        {
+            label.insert(0, std::string(" "));
+            label.insert(0, parentMenu->m_Label);
+        }
+    }
+
+    return label;
 }
 
 int main(int argc, char **argv)
 {
     Menu main("main");
 
-    main.emplace_back(MenuEntity("ssaki"));
-    main.emplace_back(MenuEntity("gady"));
-    main.emplace_back(MenuEntity("plazy"));
-    main.emplace_back(MenuEntity("ryby"));
-    main.emplace_back(MenuEntity("ptaki"));
-
     Menu ssaki("ssaki");
-    ssaki.setParent(&main);
-    ssaki.emplace_back(MenuEntity("kot",  [](){printf("\nmiau\n");}));
-    ssaki.emplace_back(MenuEntity("pies", [](){printf("\nhau\n");}));
-    ssaki.emplace_back(MenuEntity("krowa", [](){printf("\nmuu\n");}));
-    ssaki.emplace_back(MenuEntity("kon", [](){printf("\nihaha\n");}));
-
     Menu gady("gady");
-    gady.setParent(&main);
-    gady.emplace_back(MenuEntity("krokodyl",[](){printf("\njestem krokodylem\n");}));
-    gady.emplace_back(MenuEntity("jaszczurka",[](){printf("\njestem jaszczurka\n");}));
-    gady.emplace_back(MenuEntity("waz",[](){printf("\nssssss\n");}));
-    gady.emplace_back(MenuEntity("zolw",[](){printf("\njestem zolw\n");}));
-
     Menu plazy("plazy");
-    plazy.setParent(&main);
-    plazy.emplace_back(MenuEntity("zaba",[](){printf("\nkum kum\n");}));
-    plazy.emplace_back(MenuEntity("ropucha",[](){printf("\nrebek rebek\n");}));
-    plazy.emplace_back(MenuEntity("salamandra",[](){printf("\njestem salamandra\n");}));
-
     Menu ptaki("ptaki");
-    ptaki.setParent(&main);
+
+    Menu koty("koty");
+
+    main.emplace_back(MenuEntity("ssaki"), ssaki);
+    main.emplace_back(MenuEntity("gady"), gady);
+    main.emplace_back(MenuEntity("plazy"), plazy);
+    main.emplace_back(MenuEntity("ptaki"), ptaki);
+
+    ssaki.emplace_back(MenuEntity("koty"), koty);
+    ssaki.getElement("koty")->getSubMenu()->emplace_back(MenuEntity("bialy", []()
+                                                                    { printf("\nkarbon\n"); }));
+    ssaki.getElement("koty")->getSubMenu()->emplace_back(MenuEntity("czarny", []()
+                                                                    { printf("\nkokos\n"); }));
+
+    ssaki.emplace_back(MenuEntity("pies", []()
+                                  { printf("\nhau\n"); }));
+    ssaki.emplace_back(MenuEntity("krowa", []()
+                                  { printf("\nmuu\n"); }));
+    ssaki.emplace_back(MenuEntity("kon", []()
+                                  { printf("\nihaha\n"); }));
+
+    gady.emplace_back(MenuEntity("krokodyl", []()
+                                 { printf("\njestem krokodylem\n"); }));
+    gady.emplace_back(MenuEntity("jaszczurka", []()
+                                 { printf("\njestem jaszczurka\n"); }));
+    gady.emplace_back(MenuEntity("waz", []()
+                                 { printf("\nssssss\n"); }));
+    gady.emplace_back(MenuEntity("zolw", []()
+                                 { printf("\njestem zolw\n"); }));
+
+    plazy.emplace_back(MenuEntity("zaba", []()
+                                  { printf("\nkum kum\n"); }));
+    plazy.emplace_back(MenuEntity("ropucha", []()
+                                  { printf("\nrebek rebek\n"); }));
+    plazy.emplace_back(MenuEntity("salamandra", []()
+                                  { printf("\njestem salamandra\n"); }));
+
     ptaki.emplace_back(MenuEntity("mewa"));
     ptaki.emplace_back(MenuEntity("golab"));
     ptaki.emplace_back(MenuEntity("orzel"));
     ptaki.emplace_back(MenuEntity("sroka"));
-
-    main.getElement("ssaki")->setSubMenu(&ssaki);
-    main.getElement("gady")->setSubMenu(&gady);
-    main.getElement("plazy")->setSubMenu(&plazy);
-    main.getElement("ptaki")->setSubMenu(&ptaki);
 
     set_non_canonical_mode();
     std::string input;
@@ -199,9 +219,9 @@ int main(int argc, char **argv)
         prompt_fun(prompt, input);
         char z = getc(stdin);
         {
-            //printf("\r%02x\n", z);
-            //continue;
-            if(z == 0x1b) //esc
+            // printf("\r%02x\n", z);
+            // continue;
+            if (z == 0x1b) // esc
             {
                 prompt.clear();
                 input.clear();
@@ -222,8 +242,7 @@ int main(int argc, char **argv)
             {
                 if (prompt.empty() == false)
                 {
-                    
-                    input = prompt + " " +  input + " ";
+                    input = prompt + " " + input + " ";
                     prompt.clear();
                     buffer_index = input.size();
                     prompt_fun(prompt, input);
@@ -277,7 +296,8 @@ int main(int argc, char **argv)
                     {
                         // printf("going to (%s)\n",new_str.c_str());
                         current_menu = current_menu->getElement(new_str)->getSubMenu();
-                        prompt = new_str;
+                        if(prompt.empty()) prompt = new_str;
+                        else prompt = prompt + " " + new_str;
                         input.clear();
                         continue;
                     }
@@ -287,13 +307,16 @@ int main(int argc, char **argv)
             // handle_special_chars(index, input);
             if (z == 10) // newline //10 in Linux
             {
-                if(!input.empty()) input.pop_back();
-                if(!input.empty()) input.pop_back();
+                if (!input.empty())
+                    input.pop_back();
+                if (!input.empty())
+                    input.pop_back();
                 buffer_index = 0;
-                //printTokens(tokenize(input));
-                if(current_menu->getElement(input))
+                // printTokens(tokenize(input));
+                if (current_menu->getElement(input))
                     current_menu->getElement(input)->Function();
 
+                
                 input.clear();
                 printf("\n\r");
             }

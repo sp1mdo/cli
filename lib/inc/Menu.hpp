@@ -16,6 +16,7 @@ public:
     void setParent(Menu* parentMenu);
     Menu* getParent(void);
     MenuEntity& emplace_back(MenuEntity && other);
+    MenuEntity& emplace_back(MenuEntity && other, Menu &submenu);
 
 private:
     Menu* m_Parent;

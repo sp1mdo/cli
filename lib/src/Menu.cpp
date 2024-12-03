@@ -42,3 +42,12 @@ MenuEntity& Menu::emplace_back(MenuEntity && other)
     m_Entities.emplace_back(other);
     return m_Entities.back();
 }
+
+MenuEntity& Menu::emplace_back(MenuEntity && other, Menu &submenu)
+{
+    m_Entities.emplace_back(other);
+    m_Entities.back().setSubMenu(&submenu);
+    submenu.setParent(this);
+
+    return m_Entities.back();
+}
