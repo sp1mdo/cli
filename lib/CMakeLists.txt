@@ -10,6 +10,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(SOURCE_FILES
     "src/Menu.cpp"
     "src/MenuEntity.cpp"
+    "src/Prompt.cpp"
 )
 
 add_library(${PROJECT_NAME} SHARED ${SOURCE_FILES})

@@ -8,6 +8,7 @@
 #include <cstring>
 #include "../lib/inc/Menu.hpp"
 #include "../lib/inc/MenuEntity.hpp"
+#include "../lib/inc/Prompt.hpp"
 
 #define STR_TO_LOWER(str)                     \
     do                                        \
@@ -21,8 +22,6 @@
 
 const char *left_key = "\x1b\x5b\x44";
 const char *right_key = "\x1b\x5b\x43";
-
-class Menu;
 
 void set_non_canonical_mode()
 {
@@ -55,8 +54,6 @@ void handle_special_chars(size_t &index, std::string &input)
             index--;
             printf("\b");
         }
-        // clear_line();
-        //
 
         return;
     }
@@ -72,93 +69,11 @@ void handle_special_chars(size_t &index, std::string &input)
     }
 }
 
-int try_match(const std::string &input, int *index, int *chars_matching, Menu *current_menu)
-{
-    int match_count = 0;
-    std::vector<int> matching_indexes;
-    char next_letter = 0;
-
-    for (int i = 0; i < current_menu->m_Entities.size(); i++)
-    {
-        if (current_menu->m_Entities[i].getLabel().find(input) == 0)
-        {
-            matching_indexes.push_back(i);
-            *index = i;
-            match_count++;
-            *chars_matching = input.size();
-        }
-    }
-
-    if (matching_indexes.size() > 0)
-    {
-        printf("\n");
-        for (size_t i = 0; i < matching_indexes.size(); i++)
-        {
-            printf("\t%s\n", current_menu->m_Entities[matching_indexes[i]].getLabel().c_str());
-        }
-    }
-
-    return match_count;
-}
-
-void printTokens(const std::vector<std::string> &tokens)
-{
-    for (auto &token : tokens)
-    {
-        printf("%s:", token.c_str());
-    }
-    printf("\n");
-}
-
-std::vector<std::string> tokenize(const std::string &str)
-{
-    char *token = strtok((char *)str.c_str(), " - ");
-    std::vector<std::string> tokens;
-    while (token != NULL)
-    {
-        int arg_value;
-        sscanf(token, "%d", &arg_value);
-        tokens.push_back(std::string(token));
-        token = strtok(NULL, " ");
-    }
-    return tokens;
-}
-
-void clear_line(size_t chars)
-{
-    for (size_t i = 0; i < chars; i++)
-        printf(" ");
-    for (size_t i = 0; i < chars; i++)
-        printf("\b");
-}
-
-void prompt_fun(const std::string &prompt, const std::string &input)
-{
-    if (prompt.empty())
-        printf("\r# %s", input.c_str());
-    else
-        printf("\r# %s%s%s %s", GREEN_COLOR, prompt.c_str(), DEFAULT_COLOR, input.c_str());
-}
-
-std::string find_way_home(Menu* menu)
-{
-    std::string label = menu->m_Label;
-    Menu* parentMenu = menu;
-    while(parentMenu->getParent() != nullptr)
-    {
-        parentMenu = parentMenu->getParent();
-        if(parentMenu->getParent() != nullptr)
-        {
-            label.insert(0, std::string(" "));
-            label.insert(0, parentMenu->m_Label);
-        }
-    }
-
-    return label;
-}
-
 int main(int argc, char **argv)
 {
+    
+    Prompt my_prompt;
+
     Menu main("main");
 
     Menu ssaki("ssaki");
@@ -208,117 +123,45 @@ int main(int argc, char **argv)
     ptaki.emplace_back(MenuEntity("sroka"));
 
     set_non_canonical_mode();
-    std::string input;
-    size_t buffer_index = 0;
-    int ret = 0;
-    std::string prompt;
     Menu *current_menu = &main;
-    // Menu *current_menu = &ptaki;
+
+    my_prompt.setMenu(&main);
+    std::vector<std::string> tokens;
+
     while (1)
     {
-        prompt_fun(prompt, input);
+        my_prompt.print();
         char z = getc(stdin);
         {
-            // printf("\r%02x\n", z);
+            // printf("\r%02x\n", z); // debug purpose
             // continue;
+
             if (z == 0x1b) // esc
             {
-                prompt.clear();
-                input.clear();
-                prompt_fun(prompt, input);
-                clear_line(20);
-                current_menu = &main;
+                my_prompt.goToRoot();
                 continue;
             }
-            if (z != 9) // tab
+            if (z != 9 && z != 0x7f) // any valid char, but not tab
             {
-                // input.insert(index++, 1, z);
-                input.push_back(z);
-                buffer_index++;
-                // handle_special_characters(buffer, &buffer_index);
+                my_prompt.push_back(z);
+                my_prompt.print();
             }
 
             if (z == 0x7f) // backspace
             {
-                if (prompt.empty() == false)
-                {
-                    input = prompt + " " + input + " ";
-                    prompt.clear();
-                    buffer_index = input.size();
-                    prompt_fun(prompt, input);
-                    current_menu = current_menu->getParent();
-                    printf("  ");
-                }
-
-                printf("\b \b");
-                if (input.size() > 0)
-                {
-                    --buffer_index;
-                    input.pop_back();
-                }
-                if (input.size() > 0)
-                {
-                    --buffer_index;
-                    input.pop_back();
-                }
-
-                clear_line(20);
+                my_prompt.backspace();
                 continue;
             }
             else if (z == 9) // tab
             {
-                int index2 = -1;
-                int chars_matching = -1;
-                // STR_TO_LOWER(buffer);
-                ret = try_match(input, &index2, &chars_matching, current_menu);
-
-                if (ret >= 1)
-                {
-                    input.clear();
-                    if (ret == 1)
-                        input = current_menu->m_Entities[index2].getLabel();
-                    else
-                        input.assign(current_menu->m_Entities[index2].getLabel(), 0, chars_matching);
-                    if (ret == 1)
-                        input.push_back(' ');
-                    buffer_index = input.size();
-                }
-            }
-
-            if (ret > 0 || z != 9)
-            {
-                prompt_fun(prompt, input);
-                if (input.size() > 2)
-                {
-                    std::string new_str = input;
-                    new_str.pop_back();
-                    if (current_menu->getElement(new_str) != nullptr && current_menu->getElement(new_str)->getSubMenu() != nullptr)
-                    {
-                        // printf("going to (%s)\n",new_str.c_str());
-                        current_menu = current_menu->getElement(new_str)->getSubMenu();
-                        if(prompt.empty()) prompt = new_str;
-                        else prompt = prompt + " " + new_str;
-                        input.clear();
-                        continue;
-                    }
-                }
+                my_prompt.try_match();
             }
 
             // handle_special_chars(index, input);
             if (z == 10) // newline //10 in Linux
             {
-                if (!input.empty())
-                    input.pop_back();
-                if (!input.empty())
-                    input.pop_back();
-                buffer_index = 0;
-                // printTokens(tokenize(input));
-                if (current_menu->getElement(input))
-                    current_menu->getElement(input)->Function();
-
-                
-                input.clear();
-                printf("\n\r");
+                my_prompt.parseCommand();
+                my_prompt.print();
             }
         }
     }
