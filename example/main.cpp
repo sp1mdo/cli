@@ -69,11 +69,20 @@ void handle_special_chars(size_t &index, std::string &input)
     }
 }
 
+void callback(int argc, char** argv)
+{
+    printf("Received : ");
+    for(size_t i = 0 ; i < argc ; i++)
+    {
+        printf("%s, ",argv[i]);
+    }
+    printf("\n");
+}
+
 int main(int argc, char **argv)
 {
     
     Prompt my_prompt;
-
     Menu main("main");
 
     Menu ssaki("ssaki");
@@ -89,33 +98,21 @@ int main(int argc, char **argv)
     main.emplace_back(MenuEntity("ptaki"), ptaki);
 
     ssaki.emplace_back(MenuEntity("koty"), koty);
-    ssaki.getElement("koty")->getSubMenu()->emplace_back(MenuEntity("bialy", []()
-                                                                    { printf("\nkarbon\n"); }));
-    ssaki.getElement("koty")->getSubMenu()->emplace_back(MenuEntity("czarny", []()
-                                                                    { printf("\nkokos\n"); }));
+    ssaki.getElement("koty")->getSubMenu()->emplace_back(MenuEntity("bialy", [](int var, char** argv){printf("podano %d\n",var);}));                                                          
+    ssaki.getElement("koty")->getSubMenu()->emplace_back(MenuEntity("czarny", std::bind(callback, 1, std::placeholders::_2)));    
 
-    ssaki.emplace_back(MenuEntity("pies", []()
-                                  { printf("\nhau\n"); }));
-    ssaki.emplace_back(MenuEntity("krowa", []()
-                                  { printf("\nmuu\n"); }));
-    ssaki.emplace_back(MenuEntity("kon", []()
-                                  { printf("\nihaha\n"); }));
+    ssaki.emplace_back(MenuEntity("pies", callback)); 
+    ssaki.emplace_back(MenuEntity("krowa", callback)); 
+    ssaki.emplace_back(MenuEntity("kon", callback)); 
 
-    gady.emplace_back(MenuEntity("krokodyl", []()
-                                 { printf("\njestem krokodylem\n"); }));
-    gady.emplace_back(MenuEntity("jaszczurka", []()
-                                 { printf("\njestem jaszczurka\n"); }));
-    gady.emplace_back(MenuEntity("waz", []()
-                                 { printf("\nssssss\n"); }));
-    gady.emplace_back(MenuEntity("zolw", []()
-                                 { printf("\njestem zolw\n"); }));
+    gady.emplace_back(MenuEntity("krokodyl", callback)); 
+    gady.emplace_back(MenuEntity("jaszczurka", callback)); 
+    gady.emplace_back(MenuEntity("waz", callback)); 
+    gady.emplace_back(MenuEntity("zolw", callback)); 
 
-    plazy.emplace_back(MenuEntity("zaba", []()
-                                  { printf("\nkum kum\n"); }));
-    plazy.emplace_back(MenuEntity("ropucha", []()
-                                  { printf("\nrebek rebek\n"); }));
-    plazy.emplace_back(MenuEntity("salamandra", []()
-                                  { printf("\njestem salamandra\n"); }));
+    plazy.emplace_back(MenuEntity("zaba", callback)); 
+    plazy.emplace_back(MenuEntity("ropucha", callback)); 
+    plazy.emplace_back(MenuEntity("salamandra", callback)); 
 
     ptaki.emplace_back(MenuEntity("mewa"));
     ptaki.emplace_back(MenuEntity("golab"));

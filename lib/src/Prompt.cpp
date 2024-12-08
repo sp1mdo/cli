@@ -89,7 +89,7 @@ void Prompt::parseCommand(void)
         }
         else
         {
-            m_CurrentMenu->getElement(token)->Function();
+            m_CurrentMenu->getElement(token)->Function(tokenize(m_Input));
             break;
         }
     }
