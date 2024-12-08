@@ -13,12 +13,13 @@ void Prompt::debug(void)
 
 void Prompt::push_back(char c)
 {
-    if (c != ' ')
+    m_Input.push_back(c);
+    organize(c);
+
+    if (c == ' ')
     {
         m_Input.push_back(c);
     }
-
-    organize(c);
 }
 
 std::string *Prompt::getInput(void)
@@ -98,7 +99,6 @@ void Prompt::parseCommand(void)
     m_Prefix.clear();
     m_Input.clear();
 
-    //
     while (m_CurrentMenu->getParent() != nullptr)
         m_CurrentMenu = m_CurrentMenu->getParent();
 }
@@ -177,27 +177,18 @@ int Prompt::try_match(void)
 void Prompt::organize(char c)
 {
     auto inputTokens = tokenize(m_Input);
-    // debug();
-    while (inputTokens.size() > 1)
-    {
-        if (inputTokens[0].empty() == false)
-        {
-            m_Prefix.emplace_back(std::move(inputTokens[0]));
-            inputTokens.erase(inputTokens.begin());
-        }
-        else
-            return;
-    }
-    m_Input = tokensToString(inputTokens, false);
+    if(inputTokens.empty() == true)
+        return;
+    
+    m_Input = tokensToString(inputTokens, true);
     if (c == ' ' && m_CurrentMenu->getElement(inputTokens[0]) != nullptr)
     {
         m_Prefix.push_back(m_Input);
         m_Input.clear();
         if (m_CurrentMenu->getElement(m_Prefix.back()) != nullptr && m_CurrentMenu->getElement(m_Prefix.back())->getSubMenu() != nullptr)
         {
-            // printf("going to (%s)\n", m_Prefix.back().c_str());
+            printf("going to (%s)\n", m_Prefix.back().c_str());
             m_CurrentMenu = m_CurrentMenu->getElement(m_Prefix.back())->getSubMenu();
-            // my_prompt.organize(z);
         }
     }
 }
@@ -238,8 +229,13 @@ std::string Prompt::printTokens(const std::vector<std::string> &tokens)
 
 std::vector<std::string> Prompt::tokenize(const std::string &str)
 {
-    char *token = strtok((char *)str.c_str(), " - ");
     std::vector<std::string> tokens;
+    if(str == " ")
+    {
+        return tokens;
+    }
+    char *token = strtok((char *)str.c_str(), " - ");
+    
     while (token != NULL)
     {
         tokens.push_back(std::string(token));

@@ -123,8 +123,7 @@ int main(int argc, char **argv)
     Menu *current_menu = &main;
 
     my_prompt.setMenu(&main);
-    std::vector<std::string> tokens;
-
+    
     while (1)
     {
         my_prompt.print();
