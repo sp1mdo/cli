@@ -3,9 +3,9 @@
 #include <vector>
 #include <functional>
 #include <set>
-#include <termios.h>
-#include <unistd.h>
 #include <cstring>
+
+
 #include "../lib/inc/Menu.hpp"
 #include "../lib/inc/MenuEntity.hpp"
 #include "../lib/inc/Prompt.hpp"
@@ -23,24 +23,7 @@
 const char *left_key = "\x1b\x5b\x44";
 const char *right_key = "\x1b\x5b\x43";
 
-void set_non_canonical_mode()
-{
-    struct termios newt, oldt;
 
-    // Get the current terminal settings
-    tcgetattr(STDIN_FILENO, &oldt);
-
-    // Make a copy of the settings to modify
-    newt = oldt;
-
-    // Disable canonical mode (line buffering) and echo
-    newt.c_lflag &= ~(ICANON | ECHO);
-    newt.c_cc[VMIN] = 1;  // Minimum number of characters to read (1 character)
-    newt.c_cc[VTIME] = 0; // No timeout
-
-    // Apply the new terminal settings
-    tcsetattr(STDIN_FILENO, TCSANOW, &newt);
-}
 
 void handle_special_chars(size_t &index, std::string &input)
 {
@@ -69,12 +52,12 @@ void handle_special_chars(size_t &index, std::string &input)
     }
 }
 
-void callback(int argc, char** argv)
+void callback(std::vector<int> argv)
 {
     printf("Received : ");
-    for(size_t i = 0 ; i < argc ; i++)
+    for(auto & arg : argv)
     {
-        printf("%s, ",argv[i]);
+        printf("%d, ",arg);
     }
     printf("\n");
 }
@@ -98,8 +81,8 @@ int main(int argc, char **argv)
     main.emplace_back(MenuEntity("ptaki"), ptaki);
 
     ssaki.emplace_back(MenuEntity("koty"), koty);
-    ssaki.getElement("koty")->getSubMenu()->emplace_back(MenuEntity("bialy", [](int var, char** argv){printf("podano %d\n",var);}));                                                          
-    ssaki.getElement("koty")->getSubMenu()->emplace_back(MenuEntity("czarny", std::bind(callback, 1, std::placeholders::_2)));    
+    ssaki.getElement("koty")->getSubMenu()->emplace_back(MenuEntity("bialy", callback));                                                       
+    ssaki.getElement("koty")->getSubMenu()->emplace_back(MenuEntity("czarny", callback)); 
 
     ssaki.emplace_back(MenuEntity("pies", callback)); 
     ssaki.emplace_back(MenuEntity("krowa", callback)); 
@@ -119,46 +102,9 @@ int main(int argc, char **argv)
     ptaki.emplace_back(MenuEntity("orzel"));
     ptaki.emplace_back(MenuEntity("sroka"));
 
-    set_non_canonical_mode();
-    Menu *current_menu = &main;
-
-    my_prompt.setMenu(&main);
+    my_prompt.init(&main);
     
-    while (1)
-    {
-        my_prompt.print();
-        char z = getc(stdin);
-        {
-            // printf("\r%02x\n", z); // debug purpose
-            // continue;
+    my_prompt.run();
 
-            if (z == 0x1b) // esc
-            {
-                my_prompt.goToRoot();
-                continue;
-            }
-            if (z != 9 && z != 0x7f) // any valid char, but not tab
-            {
-                my_prompt.push_back(z);
-                my_prompt.print();
-            }
-
-            if (z == 0x7f) // backspace
-            {
-                my_prompt.backspace();
-                continue;
-            }
-            else if (z == 9) // tab
-            {
-                my_prompt.try_match();
-            }
-
-            // handle_special_chars(index, input);
-            if (z == 10) // newline //10 in Linux
-            {
-                my_prompt.parseCommand();
-                my_prompt.print();
-            }
-        }
-    }
+    return 0;
 }

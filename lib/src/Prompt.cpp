@@ -1,10 +1,77 @@
 #include <cstring>
 #include <sstream>
-
 #include "Prompt.hpp"
 
 #define GREEN_COLOR "\033[32m"
 #define DEFAULT_COLOR "\033[0m"
+
+
+void Prompt::setNonCanonicalMode(void)
+{
+    #ifdef UNIX
+    struct termios newt, oldt;
+
+    // Get the current terminal settings
+    tcgetattr(STDIN_FILENO, &oldt);
+
+    // Make a copy of the settings to modify
+    newt = oldt;
+
+    // Disable canonical mode (line buffering) and echo
+    newt.c_lflag &= ~(ICANON | ECHO);
+    newt.c_cc[VMIN] = 1;  // Minimum number of characters to read (1 character)
+    newt.c_cc[VTIME] = 0; // No timeout
+
+    // Apply the new terminal settings
+    tcsetattr(STDIN_FILENO, TCSANOW, &newt);
+    #endif
+}
+
+
+void Prompt::run(void)
+{
+    while (1)
+    {
+        print();
+        #ifdef UNIX
+        char z = getc(stdin);
+        #elif WIN32
+        int z = _getch();
+        #endif
+        {
+            // printf("\r%02x\n", z); // debug purpose
+            // continue;
+
+            if (z == 0x1b) // esc
+            {
+                goToRoot();
+                continue;
+            }
+            if (z != 9 && z != 0x7f) // any valid char, but not tab
+            {
+                push_back(z);
+                print();
+            }
+
+            if (z == 0x7f) // backspace
+            {
+                backspace();
+                continue;
+            }
+            else if (z == 9) // tab
+            {
+                try_match();
+            }
+
+            // handle_special_chars(index, input);
+            if (z == 10) // newline //10 in Linux
+            {
+                parseCommand();
+                print();
+            }
+        }
+    }
+}
 
 void Prompt::debug(void)
 {
@@ -13,10 +80,11 @@ void Prompt::debug(void)
 
 void Prompt::push_back(char c)
 {
+    Menu* old_menu = this->m_CurrentMenu;
     m_Input.push_back(c);
     organize(c);
 
-    if (c == ' ')
+    if (c == ' ' && old_menu == this->m_CurrentMenu)
     {
         m_Input.push_back(c);
     }
@@ -113,9 +181,11 @@ void Prompt::goToRoot(void)
     m_Prefix.clear();
 }
 
-void Prompt::setMenu(Menu *menu)
+void Prompt::init(Menu *menu)
 {
     m_CurrentMenu = menu;
+
+    setNonCanonicalMode();
 }
 
 void Prompt::clear_line(size_t chars)

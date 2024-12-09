@@ -11,7 +11,7 @@ class MenuEntity
 {
 public:
     MenuEntity(std::string label);
-    MenuEntity(std::string label, std::function<void(int, char **)> fun);
+    MenuEntity(std::string label, std::function<void(std::vector<int>)> fun);
     ~MenuEntity() {};
     std::string getLabel(void);
     void Function(const Tokens &args);
@@ -22,7 +22,7 @@ public:
 private:
     char **TokensToArgv(const Tokens &args);
     void freeArgv(char **argv, size_t size);
-    std::function<void(int, char **)> m_Function;
+    std::function<void(std::vector<int>)> m_Function;
     std::string m_Label;
     Menu *m_Submenu;
 };

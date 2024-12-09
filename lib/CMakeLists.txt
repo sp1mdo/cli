@@ -12,6 +12,17 @@ set(SOURCE_FILES
     "src/MenuEntity.cpp"
     "src/Prompt.cpp"
 )
+if (WIN32)
+    message(WARNING "Building on Windows.")
+    add_definitions(-DWIN32)
+    # Add Windows-specific settings here
+elseif (UNIX)
+    message(WARNING "Building on Linux/Unix.")
+    add_definitions(-DUNIX)
+    # Add Linux-specific settings here
+else()
+    message(WARNING "Unknown platform.")
+endif()
 
 add_library(${PROJECT_NAME} SHARED ${SOURCE_FILES})
 

@@ -8,7 +8,7 @@ MenuEntity::MenuEntity(std::string label) : m_Label(label), m_Submenu(nullptr) {
 
                                             };
 
-MenuEntity::MenuEntity(std::string label, std::function<void(int, char **)> fun) : m_Function(fun), m_Label(label)
+MenuEntity::MenuEntity(std::string label, std::function<void(std::vector<int>)> fun) : m_Function(fun), m_Label(label)
 {
 }
 
@@ -20,8 +20,14 @@ std::string MenuEntity::getLabel(void)
 void MenuEntity::Function(const Tokens &args)
 {
     auto myArgs = TokensToArgv(args);
+    std::vector<int> vect_args;
+    for(auto & str : args)
+    {
+        vect_args.push_back(atoi(str.c_str()));
+    }
+
     if (m_Function)
-        m_Function(args.size(), myArgs);
+        m_Function(vect_args);
 
     freeArgv(myArgs, args.size());
 }
