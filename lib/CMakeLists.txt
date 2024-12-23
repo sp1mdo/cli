@@ -8,8 +8,6 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 set(SOURCE_FILES
-    "src/Menu.cpp"
-    "src/MenuEntity.cpp"
     "src/Prompt.cpp"
 )
 if (WIN32)

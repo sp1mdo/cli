@@ -4,10 +4,8 @@
 #include <functional>
 #include <set>
 #include <cstring>
+#include <map>
 
-
-#include "../lib/inc/Menu.hpp"
-#include "../lib/inc/MenuEntity.hpp"
 #include "../lib/inc/Prompt.hpp"
 
 #define STR_TO_LOWER(str)                     \
@@ -24,6 +22,7 @@ const char *left_key = "\x1b\x5b\x44";
 const char *right_key = "\x1b\x5b\x43";
 
 
+std::map<std::string, std::function<void()>> MyMenu;
 
 void handle_special_chars(size_t &index, std::string &input)
 {
@@ -52,58 +51,44 @@ void handle_special_chars(size_t &index, std::string &input)
     }
 }
 
-void callback(std::vector<int> argv)
+void callback(std::string str)
 {
-    printf("Received : ");
-    for(auto & arg : argv)
-    {
-        printf("%d, ",arg);
-    }
-    printf("\n");
+    printf("Received : %s \n ", str.c_str());
 }
 
 int main(int argc, char **argv)
 {
-    
     Prompt my_prompt;
-    Menu main("main");
+    my_prompt.insertMapElement("europa polska szczecin centrum", callback);
+    my_prompt.insertMapElement("europa polska szczecin turzyn", callback);
+    my_prompt.insertMapElement("europa polska szczecin pogodno", callback);
+    my_prompt.insertMapElement("europa polska szczecin niebuszewo", callback);
+    my_prompt.insertMapElement("europa polska szczecin warszewo", callback);
+    my_prompt.insertMapElement("europa polska warszawa", callback);
+    my_prompt.insertMapElement("europa polska bialystok", callback);
+    my_prompt.insertMapElement("europa polska zakopane", callback);
+    my_prompt.insertMapElement("europa niemcy berlin", callback);
+    my_prompt.insertMapElement("europa niemcy frankfurt", callback);
+    my_prompt.insertMapElement("europa francja paryz", callback);
+    my_prompt.insertMapElement("europa szwecja sztokholm", callback);
+    my_prompt.insertMapElement("europa hiszpania barcelona", callback);
+    my_prompt.insertMapElement("europa norwegia", callback);
+    my_prompt.insertMapElement("afryka kongo", callback);
+    my_prompt.insertMapElement("azja rosja moskwa", callback);
+    my_prompt.insertMapElement("azja rosja soczi", callback);
+    my_prompt.insertMapElement("azja rosja irkutsk", callback);
+    my_prompt.insertMapElement("azja rosja kursk", callback);
+    my_prompt.insertMapElement("europa czechy praga", callback);
+    my_prompt.insertMapElement("azja gruzja tbilisi", callback);
+    my_prompt.insertMapElement("ameryka usa waszyngton", callback);
+    my_prompt.insertMapElement("ameryka usa chicago", callback);
 
-    Menu ssaki("ssaki");
-    Menu gady("gady");
-    Menu plazy("plazy");
-    Menu ptaki("ptaki");
 
-    Menu koty("koty");
-
-    main.emplace_back(MenuEntity("ssaki"), ssaki);
-    main.emplace_back(MenuEntity("gady"), gady);
-    main.emplace_back(MenuEntity("plazy"), plazy);
-    main.emplace_back(MenuEntity("ptaki"), ptaki);
-
-    ssaki.emplace_back(MenuEntity("koty"), koty);
-    ssaki.getElement("koty")->getSubMenu()->emplace_back(MenuEntity("bialy", callback));                                                       
-    ssaki.getElement("koty")->getSubMenu()->emplace_back(MenuEntity("czarny", callback)); 
-
-    ssaki.emplace_back(MenuEntity("pies", callback)); 
-    ssaki.emplace_back(MenuEntity("krowa", callback)); 
-    ssaki.emplace_back(MenuEntity("kon", callback)); 
-
-    gady.emplace_back(MenuEntity("krokodyl", callback)); 
-    gady.emplace_back(MenuEntity("jaszczurka", callback)); 
-    gady.emplace_back(MenuEntity("waz", callback)); 
-    gady.emplace_back(MenuEntity("zolw", callback)); 
-
-    plazy.emplace_back(MenuEntity("zaba", callback)); 
-    plazy.emplace_back(MenuEntity("ropucha", callback)); 
-    plazy.emplace_back(MenuEntity("salamandra", callback)); 
-
-    ptaki.emplace_back(MenuEntity("mewa"));
-    ptaki.emplace_back(MenuEntity("golab"));
-    ptaki.emplace_back(MenuEntity("orzel"));
-    ptaki.emplace_back(MenuEntity("sroka"));
-
-    my_prompt.init(&main);
     
+    
+
+    //my_prompt.init(&main);
+    my_prompt.setNonCanonicalMode();
     my_prompt.run();
 
     return 0;

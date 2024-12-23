@@ -1,14 +1,13 @@
 #include <cstring>
 #include <sstream>
+#include <set>
 #include "Prompt.hpp"
 
 #define GREEN_COLOR "\033[32m"
 #define DEFAULT_COLOR "\033[0m"
 
-
 void Prompt::setNonCanonicalMode(void)
 {
-    #ifdef UNIX
     struct termios newt, oldt;
 
     // Get the current terminal settings
@@ -24,32 +23,26 @@ void Prompt::setNonCanonicalMode(void)
 
     // Apply the new terminal settings
     tcsetattr(STDIN_FILENO, TCSANOW, &newt);
-    #endif
 }
-
 
 void Prompt::run(void)
 {
     while (1)
     {
         print();
-        #ifdef UNIX
         char z = getc(stdin);
-        #elif WIN32
-        int z = _getch();
-        #endif
         {
             // printf("\r%02x\n", z); // debug purpose
             // continue;
 
             if (z == 0x1b) // esc
             {
-                goToRoot();
+                m_Input.clear();
                 continue;
             }
             if (z != 9 && z != 0x7f) // any valid char, but not tab
             {
-                push_back(z);
+                m_Input.push_back(z);
                 print();
             }
 
@@ -75,24 +68,7 @@ void Prompt::run(void)
 
 void Prompt::debug(void)
 {
-    printf("\nx[(%zu)%s][%s] \n", m_Prefix.size(), printTokens(m_Prefix).c_str(), m_Input.c_str());
-}
-
-void Prompt::push_back(char c)
-{
-    Menu* old_menu = this->m_CurrentMenu;
-    m_Input.push_back(c);
-    organize(c);
-
-    if (c == ' ' && old_menu == this->m_CurrentMenu)
-    {
-        m_Input.push_back(c);
-    }
-}
-
-std::string *Prompt::getInput(void)
-{
-    return &m_Input;
+    printf("\n[%s] \n", m_Input.c_str());
 }
 
 bool Prompt::backspace(void)
@@ -102,37 +78,6 @@ bool Prompt::backspace(void)
     if (m_Input.size() > 0)
     {
         m_Input.pop_back();
-        if (m_Prefix.empty() == true)
-            return false;
-    }
-    else if (m_Prefix.size() > 0)
-    {
-        if (m_Prefix.empty() == false)
-        {
-            while (m_Prefix.back().size() == 0 && m_Prefix.size() > 0)
-            {
-                m_Prefix.pop_back();
-            }
-        }
-        if (m_Prefix.empty() == false)
-            m_Input = std::move(m_Prefix.back());
-
-        if (m_CurrentMenu->getParent() != nullptr)
-            m_CurrentMenu = m_CurrentMenu->getParent();
-
-        if (m_Input.size() > 0)
-        {
-            m_Input.pop_back();
-        }
-    }
-
-    if (m_Prefix.size() > 0)
-    {
-        while (m_Prefix.back().empty() == true)
-        {
-            m_Prefix.pop_back();
-            break;
-        }
     }
 
     clear_line(20);
@@ -142,50 +87,26 @@ bool Prompt::backspace(void)
 
 void Prompt::parseCommand(void)
 {
-    if (m_Input.back() == '\n')
+    printf("parse");
+    while (m_Input.back() == ' ' || m_Input.back() == 0x0a) // trim all newline chars and spaces at the end of input str
         m_Input.pop_back();
 
-    // printf("entered command : %s [%s] \n", tokensToString(m_Prefix, true).c_str(),m_Input.c_str());
-
-    while (m_CurrentMenu->getParent() != nullptr)
-        m_CurrentMenu = m_CurrentMenu->getParent(); // Finding the root
-
-    for (auto &token : m_Prefix)
+    for (size_t i = 0; i < m_Input.size(); i++)
     {
-        if (m_CurrentMenu->getElement(token) != nullptr && m_CurrentMenu->getElement(token)->getSubMenu() != nullptr)
+        std::string command(m_Input, 0, i + 1); //find a moment where the command is separated from the args
+        if (m_MapMenu.find(command) != m_MapMenu.end())
         {
-            m_CurrentMenu = m_CurrentMenu->getElement(token)->getSubMenu();
-        }
-        else
-        {
-            m_CurrentMenu->getElement(token)->Function(tokenize(m_Input));
+            std::string args(m_Input, i + 1, sizeof(m_Input));
+            while (args.front() == ' ')
+                args.erase(args.begin());
+
+            m_MapMenu.at(command)(args); //execute callabck with given args
             break;
         }
     }
 
-    printf("\n");
-    m_Prefix.clear();
     m_Input.clear();
-
-    while (m_CurrentMenu->getParent() != nullptr)
-        m_CurrentMenu = m_CurrentMenu->getParent();
-}
-
-void Prompt::goToRoot(void)
-{
-    while (m_CurrentMenu->getParent() != nullptr)
-        m_CurrentMenu = m_CurrentMenu->getParent();
-
     clear_line(20);
-    m_Input.clear();
-    m_Prefix.clear();
-}
-
-void Prompt::init(Menu *menu)
-{
-    m_CurrentMenu = menu;
-
-    setNonCanonicalMode();
 }
 
 void Prompt::clear_line(size_t chars)
@@ -198,79 +119,85 @@ void Prompt::clear_line(size_t chars)
         printf("\b");
 }
 
+std::string Prompt::getFirstNWords(const std::string &input, size_t N)
+{
+    std::istringstream stream(input);
+    std::string word;
+    std::vector<std::string> words;
+
+    // Extract words from the string stream
+    while (stream >> word && words.size() < N)
+    {
+        words.emplace_back(std::move(word));
+    }
+
+    // Combine the first N words back into a single string
+    std::ostringstream result;
+    for (size_t i = 0; i < words.size(); ++i)
+    {
+        if (i > 0)
+            result << " "; // Add a space between words
+        result << std::move(words[i]);
+    }
+
+    return result.str();
+}
+
+size_t countCharacterOccurrences(const std::string &input, char target)
+{
+    return std::count(input.begin(), input.end(), target);
+}
+
+std::string getLastWord(const std::string &input)
+{
+    // Trim trailing whitespace (if any)
+    auto end = std::find_if(input.rbegin(), input.rend(), [](char c)
+                            { return !std::isspace(static_cast<unsigned char>(c)); })
+                   .base();
+
+    if (end == input.begin())
+    {
+        return ""; // Return empty string if input is all whitespace
+    }
+
+    // Find the beginning of the last word
+    auto start = std::find_if(std::string::const_reverse_iterator(end), input.rend(), [](char c)
+                              { return std::isspace(static_cast<unsigned char>(c)); })
+                     .base();
+
+    return std::string(start, end);
+}
+
 int Prompt::try_match(void)
 {
     int match_count = 0;
     std::vector<int> matching_indexes;
-    size_t index;
-    size_t chars_matching;
-    if (m_Prefix.empty() == false)
-    {
-        if (m_Input.empty() == true && m_CurrentMenu->getElement(m_Prefix.back()) != nullptr)
-            return 0;
-    }
+    std::set<std::string> matches;
 
-    for (size_t i = 0; i < m_CurrentMenu->m_Entities.size(); i++)
+    for (auto &element : m_MapMenu)
     {
-        if (m_CurrentMenu->m_Entities[i].getLabel().find(m_Input) == 0)
+        if (element.first.find(m_Input) == 0)
         {
-            matching_indexes.push_back(i);
-            index = i;
-            match_count++;
-            chars_matching = m_Input.size();
+            // chars_matching = m_Input.size();
+            matches.emplace(getFirstNWords(element.first, countCharacterOccurrences(m_Input, ' ') + 1) + " ");
         }
     }
-
-    if (matching_indexes.size() > 0)
+    printf("\n");
+    for (auto &element : matches)
     {
-        printf("\n");
-        for (size_t i = 0; i < matching_indexes.size(); i++)
-        {
-            printf("\t%s\n", m_CurrentMenu->m_Entities[matching_indexes[i]].getLabel().c_str());
-        }
+        printf("\t%s \n", getLastWord(element).c_str());
     }
 
-    if (match_count >= 1)
-    {
-        m_Input.clear();
-        if (match_count == 1)
-            m_Input = m_CurrentMenu->m_Entities[index].getLabel();
-        else
-            m_Input.assign(m_CurrentMenu->m_Entities[index].getLabel(), 0, chars_matching);
-
-        if (match_count == 1)
-            organize(' ');
-    }
+    if (matches.size() == 1)
+        m_Input = *(matches.begin());
+    printf("\n");
 
     return match_count;
-}
-void Prompt::organize(char c)
-{
-    auto inputTokens = tokenize(m_Input);
-    if(inputTokens.empty() == true)
-        return;
-    
-    m_Input = tokensToString(inputTokens, true);
-    if (c == ' ' && m_CurrentMenu->getElement(inputTokens[0]) != nullptr)
-    {
-        m_Prefix.push_back(m_Input);
-        m_Input.clear();
-        if (m_CurrentMenu->getElement(m_Prefix.back()) != nullptr && m_CurrentMenu->getElement(m_Prefix.back())->getSubMenu() != nullptr)
-        {
-            printf("going to (%s)\n", m_Prefix.back().c_str());
-            m_CurrentMenu = m_CurrentMenu->getElement(m_Prefix.back())->getSubMenu();
-        }
-    }
 }
 
 void Prompt::print(void)
 {
-    std::string prefixStr = tokensToString(m_Prefix, true);
-
-    if (m_Prefix.empty())
-        printf("\r# %s", m_Input.c_str());
-    else
-        printf("\r# %s%s%s %s", GREEN_COLOR, prefixStr.c_str(), DEFAULT_COLOR, m_Input.c_str());
+    printf("\r# %s", m_Input.c_str());
 }
 
 std::string Prompt::tokensToString(Tokens &tokens, bool space)
@@ -300,12 +227,12 @@ std::string Prompt::printTokens(const std::vector<std::string> &tokens)
 std::vector<std::string> Prompt::tokenize(const std::string &str)
 {
     std::vector<std::string> tokens;
-    if(str == " ")
+    if (str == " ")
     {
         return tokens;
     }
     char *token = strtok((char *)str.c_str(), " - ");
-    
+
     while (token != NULL)
     {
         tokens.push_back(std::string(token));
@@ -314,18 +241,7 @@ std::vector<std::string> Prompt::tokenize(const std::string &str)
     return tokens;
 }
 
-/*
-std::vector<std::string> Prompt::tokenize(const std::string &input)
+void Prompt::insertMapElement(std::string &&str, Callback cb)
 {
-    std::vector<std::string> tokens;
-    std::istringstream stream(input);
-    std::string word;
-
-    // Extract words separated by whitespace
-    while (stream >> word)
-    {
-        tokens.push_back(word);
-    }
-
-    return tokens;
-}*/
+    m_MapMenu.insert({str, cb});
+}
