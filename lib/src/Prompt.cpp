@@ -90,7 +90,6 @@ bool Prompt::backspace(void) // todo void
 
 void Prompt::parseCommand(void)
 {
-
     while (m_Input.back() == ' ' || m_Input.back() == 0x0a) // trim all newline chars and spaces at the end of input str
         m_Input.pop_back();
 
@@ -100,19 +99,21 @@ void Prompt::parseCommand(void)
     {
         if (element.first.find(m_Input) != std::string::npos)
         {
-            cnt++;
+            cnt++; //TODO : make check if the word is not truncated, for example : po instead of poland
             if(getLastWord(element.first) == m_Input && cnt == 1)
                 last = true; // don't make prefix if the word is the last one, so it's the command actually
         }
     }
 
-    if (cnt >= 1 && m_Input.empty() == false && last == false)
+    std::string updatestr ;
+    if (m_Prefix.empty() == true)
+        updatestr = m_Input;
+    else
+        updatestr = m_Prefix + " " + m_Input;
+
+    if (cnt >= 1 && m_Input.empty() == false && last == false && m_AuxMenu.find(updatestr) == m_AuxMenu.end())
     {
-        std::string updatestr;
-        if (m_Prefix.empty() == true)
-            updateAuxMenu( m_Input);
-        else
-            updateAuxMenu(m_Prefix + " " + m_Input);
+        updateAuxMenu( updatestr);
 
         m_Input.clear();
         clear_line(20);
