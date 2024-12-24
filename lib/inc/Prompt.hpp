@@ -26,13 +26,16 @@ public:
     int try_match(void);
     void parseCommand(void);
 
-    void insertMapElement(std::string &&str, Callback cb);
-    std::map<std::string, Callback> m_MapMenu;
+    void insertMapElement(const std::string &str, Callback cb);
+    std::map<std::string, Callback> m_MainMenu;
+    std::map<std::string, Callback> m_AuxMenu;
     void setNonCanonicalMode(void);
-
+    void updateAuxMenu(const std::string &preix);
 private:
     std::string m_Input;
-
+    std::string m_Prefix;
+    size_t countCharacterOccurrences(const std::string &input, char target);
+    std::string getLastWord(const std::string &input);
     Tokens tokenize(const std::string &str);
     std::string tokensToString(Tokens &tokens, bool space);
     std::string printTokens(const Tokens &tokens);

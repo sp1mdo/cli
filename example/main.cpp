@@ -2,6 +2,8 @@
 #include <string>
 #include <vector>
 #include <functional>
+#include <algorithm>
+#include <fstream>
 #include <set>
 #include <cstring>
 #include <map>
@@ -59,36 +61,28 @@ void callback(std::string str)
 int main(int argc, char **argv)
 {
     Prompt my_prompt;
-    my_prompt.insertMapElement("europa polska szczecin centrum", callback);
-    my_prompt.insertMapElement("europa polska szczecin turzyn", callback);
-    my_prompt.insertMapElement("europa polska szczecin pogodno", callback);
-    my_prompt.insertMapElement("europa polska szczecin niebuszewo", callback);
-    my_prompt.insertMapElement("europa polska szczecin warszewo", callback);
-    my_prompt.insertMapElement("europa polska warszawa", callback);
-    my_prompt.insertMapElement("europa polska bialystok", callback);
-    my_prompt.insertMapElement("europa polska zakopane", callback);
-    my_prompt.insertMapElement("europa niemcy berlin", callback);
-    my_prompt.insertMapElement("europa niemcy frankfurt", callback);
-    my_prompt.insertMapElement("europa francja paryz", callback);
-    my_prompt.insertMapElement("europa szwecja sztokholm", callback);
-    my_prompt.insertMapElement("europa hiszpania barcelona", callback);
-    my_prompt.insertMapElement("europa norwegia", callback);
-    my_prompt.insertMapElement("afryka kongo", callback);
-    my_prompt.insertMapElement("azja rosja moskwa", callback);
-    my_prompt.insertMapElement("azja rosja soczi", callback);
-    my_prompt.insertMapElement("azja rosja irkutsk", callback);
-    my_prompt.insertMapElement("azja rosja kursk", callback);
-    my_prompt.insertMapElement("europa czechy praga", callback);
-    my_prompt.insertMapElement("azja gruzja tbilisi", callback);
-    my_prompt.insertMapElement("ameryka usa waszyngton", callback);
-    my_prompt.insertMapElement("ameryka usa chicago", callback);
 
+    std::ifstream file(argv[1]);
+    
+    // Check if the file was successfully opened
+    if (!file.is_open())
+    {
+        fprintf(stderr, "Failed to open the file.");
+        return 1;
+    }
 
-    
-    
+    std::string line;
+    while (std::getline(file, line))
+    {
+        std::transform(line.begin(), line.end(), line.begin(),  [](unsigned char c){ return std::tolower(c); });
+        my_prompt.insertMapElement(line, callback);
+    }
 
     //my_prompt.init(&main);
     my_prompt.setNonCanonicalMode();
+
+    my_prompt.updateAuxMenu("");
+
     my_prompt.run();
 
     return 0;

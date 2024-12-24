@@ -35,9 +35,12 @@ void Prompt::run(void)
             // printf("\r%02x\n", z); // debug purpose
             // continue;
 
-            if (z == 0x1b) // esc
+            if (z == 0x1b || (z == 0x7f && m_Input.empty() == true)) // esc
             {
+                updateAuxMenu("");
+                m_Prefix.clear();
                 m_Input.clear();
+                clear_line(20);
                 continue;
             }
             if (z != 9 && z != 0x7f) // any valid char, but not tab
@@ -71,7 +74,7 @@ void Prompt::debug(void)
     printf("\n[%s] \n", m_Input.c_str());
 }
 
-bool Prompt::backspace(void)
+bool Prompt::backspace(void) // todo void
 {
     printf("\b \b");
 
@@ -87,20 +90,45 @@ bool Prompt::backspace(void)
 
 void Prompt::parseCommand(void)
 {
-    printf("parse");
+
     while (m_Input.back() == ' ' || m_Input.back() == 0x0a) // trim all newline chars and spaces at the end of input str
         m_Input.pop_back();
 
+    size_t cnt = 0;
+    bool last = false;
+    for (auto &element : m_AuxMenu)
+    {
+        if (element.first.find(m_Input) != std::string::npos)
+        {
+            cnt++;
+            if(getLastWord(element.first) == m_Input && cnt == 1)
+                last = true; // don't make prefix if the word is the last one, so it's the command actually
+        }
+    }
+
+    if (cnt >= 1 && m_Input.empty() == false && last == false)
+    {
+        std::string updatestr;
+        if (m_Prefix.empty() == true)
+            updateAuxMenu( m_Input);
+        else
+            updateAuxMenu(m_Prefix + " " + m_Input);
+
+        m_Input.clear();
+        clear_line(20);
+        return;
+    }
+
     for (size_t i = 0; i < m_Input.size(); i++)
     {
-        std::string command(m_Input, 0, i + 1); //find a moment where the command is separated from the args
-        if (m_MapMenu.find(command) != m_MapMenu.end())
+        std::string command(m_Input, 0, i + 1); // find a moment where the command is separated from the args
+        if (m_AuxMenu.find(command) != m_AuxMenu.end())
         {
             std::string args(m_Input, i + 1, sizeof(m_Input));
             while (args.front() == ' ')
                 args.erase(args.begin());
 
-            m_MapMenu.at(command)(args); //execute callabck with given args
+            m_AuxMenu.at(command)(args); // execute callabck with given args
             break;
         }
     }
@@ -143,12 +171,12 @@ std::string Prompt::getFirstNWords(const std::string &input, size_t N)
     return result.str();
 }
 
-size_t countCharacterOccurrences(const std::string &input, char target)
+size_t Prompt::countCharacterOccurrences(const std::string &input, char target)
 {
     return std::count(input.begin(), input.end(), target);
 }
 
-std::string getLastWord(const std::string &input)
+std::string Prompt::getLastWord(const std::string &input)
 {
     // Trim trailing whitespace (if any)
     auto end = std::find_if(input.rbegin(), input.rend(), [](char c)
@@ -174,7 +202,7 @@ int Prompt::try_match(void)
     std::vector<int> matching_indexes;
     std::set<std::string> matches;
 
-    for (auto &element : m_MapMenu)
+    for (auto &element : m_AuxMenu)
     {
         if (element.first.find(m_Input) == 0)
         {
@@ -197,7 +225,38 @@ int Prompt::try_match(void)
 
 void Prompt::print(void)
 {
-    printf("\r# %s", m_Input.c_str());
+    if (m_Prefix.empty() == true)
+        printf("\r# %s", m_Input.c_str());
+    else
+        printf("\r%s%s%s # %s", GREEN_COLOR, m_Prefix.c_str(), DEFAULT_COLOR, m_Input.c_str());
+}
+
+void Prompt::updateAuxMenu(const std::string &prefix)
+{
+    m_AuxMenu.clear();
+    for (auto &element : m_MainMenu)
+    {
+        if (element.first.find(prefix) == 0)
+        {
+            std::string newstr(element.first, prefix.size(), element.first.size());
+            if (newstr[0] == ' ')
+                newstr.erase(newstr.begin());
+            // printf("%s\n",newstr.c_str());
+            m_AuxMenu.insert({newstr, element.second});
+        }
+    }
+
+    m_Prefix = prefix;
+
+    if (m_Prefix[0] == ' ')
+        m_Prefix.erase(m_Prefix.begin());
+
+    if (m_AuxMenu.size() == 0)
+    {
+        printf("oops!\n");
+        m_AuxMenu = m_MainMenu;
+        m_Prefix.clear();
+    }
 }
 
 std::string Prompt::tokensToString(Tokens &tokens, bool space)
@@ -241,7 +300,7 @@ std::vector<std::string> Prompt::tokenize(const std::string &str)
     return tokens;
 }
 
-void Prompt::insertMapElement(std::string &&str, Callback cb)
+void Prompt::insertMapElement(const std::string &str, Callback cb)
 {
-    m_MapMenu.insert({str, cb});
+    m_MainMenu.insert({str, cb});
 }

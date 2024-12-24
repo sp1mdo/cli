@@ -1,0 +1,298 @@
+asia russia Moscow
+asia russia Petersburg
+asia russia Novosibirsk
+africa Algeria Algiers
+africa Algeria Oran
+africa Algeria Constantine
+africa Angola Luanda
+africa Angola Huambo
+africa Angola Lobito
+africa Benin Porto-Novo
+africa Benin Cotonou
+africa Benin Parakou
+africa Botswana Gaborone
+africa Botswana Francistown
+africa Botswana Maun
+africa Burkina Faso Ouagadougou
+africa Burkina Faso Bobo-Dioulasso
+africa Burkina Faso Koudougou
+africa Burundi Gitega
+africa Burundi Bujumbura
+africa Burundi Ngozi
+africa Cabo Verde Praia
+africa Cabo Verde Mindelo
+africa Cabo Verde Santa Maria
+africa Cameroon Yaoundé
+africa Cameroon Douala
+africa Cameroon Garoua
+africa Central African Republic Bangui
+africa Central African Republic Bambari
+africa Central African Republic Berbérati
+africa Chad N'Djamena
+africa Chad Moundou
+africa Chad Sarh
+africa Comoros Moroni
+africa Comoros Mutsamudu
+africa Comoros Fomboni
+africa Congo Brazzaville
+africa Congo Pointe-Noire
+africa Congo Dolisie
+africa Congo Kinshasa
+africa Congo Lubumbashi
+africa Congo Mbuji-Mayi
+africa Djibouti Djibouti
+africa Djibouti Ali Sabieh
+africa Djibouti Tadjourah
+africa Egypt Cairo
+africa Egypt Alexandria
+africa Egypt Giza
+africa Equatorial Guinea Malabo
+africa Equatorial Guinea Bata
+africa Equatorial Guinea Ebebiyin
+africa Eritrea Asmara
+africa Eritrea Keren
+africa Eritrea Massawa
+africa Eswatini Mbabane
+africa Eswatini Manzini
+africa Eswatini Big Bend
+africa Ethiopia Addis Ababa
+africa Ethiopia Dire Dawa
+africa Ethiopia Mekelle
+africa Gabon Libreville
+africa Gabon Port-Gentil
+africa Gabon Franceville
+africa Gambia Banjul
+africa Gambia Serekunda
+africa Gambia Brikama
+africa Ghana Accra
+africa Ghana Kumasi
+africa Ghana Tamale
+africa Guinea Conakry
+africa Guinea Kankan
+africa Guinea Nzérékoré
+africa Guinea-Bissau Bissau
+africa Guinea-Bissau Bafatá
+africa Guinea-Bissau Gabú
+africa Ivory Coast Yamoussoukro
+africa Ivory Coast Abidjan
+africa Ivory Coast Bouaké
+africa Kenya Nairobi
+africa Kenya Mombasa
+africa Kenya Kisumu
+africa Lesotho Maseru
+africa Lesotho Teyateyaneng
+africa Lesotho Mafeteng
+africa Liberia Monrovia
+africa Liberia Gbarnga
+africa Liberia Buchanan
+africa Libya Tripoli
+africa Libya Benghazi
+africa Libya Misrata
+africa Madagascar Antananarivo
+africa Madagascar Toamasina
+africa Madagascar Antsirabe
+africa Malawi Lilongwe
+africa Malawi Blantyre
+africa Malawi Mzuzu
+africa Mali Bamako
+africa Mali Sikasso
+africa Mali Mopti
+africa Mauritania Nouakchott
+africa Mauritania Nouadhibou
+africa Mauritania Kaédi
+africa Mauritius Port Louis
+africa Mauritius Curepipe
+africa Mauritius Vacoas
+africa Morocco Rabat
+africa Morocco Casablanca
+africa Morocco Marrakesh
+africa Mozambique Maputo
+africa Mozambique Beira
+africa Mozambique Nampula
+africa Namibia Windhoek
+africa Namibia Walvis Bay
+africa Namibia Swakopmund
+africa Niger Niamey
+africa Niger Zinder
+africa Niger Maradi
+africa Nigeria Abuja
+africa Nigeria Lagos
+africa Nigeria Kano
+africa Rwanda Kigali
+africa Rwanda Butare
+africa Rwanda Gisenyi
+africa São Tomé and Príncipe São Tomé
+africa São Tomé and Príncipe Trindade
+africa São Tomé and Príncipe Neves
+africa Senegal Dakar
+africa Senegal Saint-Louis
+africa Senegal Touba
+africa Seychelles Victoria
+africa Seychelles Anse Royale
+africa Seychelles Beau Vallon
+africa Sierra Leone Freetown
+africa Sierra Leone Bo
+africa Sierra Leone Kenema
+africa Somalia Mogadishu
+africa Somalia Hargeisa
+africa Somalia Kismayo
+africa South Africa Pretoria
+africa South Africa Johannesburg
+africa South Africa Cape Town
+africa South Sudan Juba
+africa South Sudan Wau
+africa South Sudan Malakal
+africa Sudan Khartoum
+africa Sudan Omdurman
+africa Sudan Port Sudan
+africa Tanzania Dodoma
+africa Tanzania Dar_es_Salaam
+africa Tanzania Arusha
+africa Togo Lomé
+africa Togo Sokodé
+africa Togo Kara
+africa Tunisia Tunis
+africa Tunisia Sfax
+africa Tunisia Sousse
+africa Uganda Kampala
+africa Uganda Entebbe
+africa Uganda Gulu
+africa Zambia Lusaka
+africa Zambia Ndola
+africa Zambia Kitwe
+africa Zimbabwe Harare
+africa Zimbabwe Bulawayo
+africa Zimbabwe Mutare
+europe albania Tirana
+europe albania Durrës
+europe albania Vlorë
+europe andorra andorra la_Vella
+europe austria Vienna
+europe austria Salzburg
+europe austria Graz
+europe belarus Minsk
+europe belarus Gomel
+europe belarus brest
+europe belarus grodno
+europe belarus racicze
+europe belgium brussels
+europe belgium antwerp
+europe belgium Ghent
+europe bosnia Sarajevo
+europe bosnia banja Luka
+europe bosnia Mostar
+europe bulgaria Sofia
+europe bulgaria Plovdiv
+europe bulgaria Varna
+europe croatia Zagreb
+europe croatia Split
+europe croatia Dubrovnik
+europe cyprus Nicosia
+europe cyprus Limassol
+europe cyprus Larnaca
+europe czech Republic Prague
+europe czech Republic brno
+europe czech Republic Ostrava
+europe Denmark copenhagen
+europe Denmark aarhus
+europe Denmark Odense
+europe Estonia Tallinn
+europe Estonia Tartu
+europe Estonia Narva
+europe Finland Helsinki
+europe Finland Espoo
+europe Finland Tampere
+europe France Paris
+europe France Lyon
+europe France Marseille
+europe Germany berlin
+europe Germany Hamburg
+europe Germany Munich
+europe Greece athens
+europe Greece Thessaloniki
+europe Greece Patras
+europe Hungary budapest
+europe Hungary Debrecen
+europe Hungary Szeged
+europe Iceland Reykjavik
+europe Iceland akureyri
+europe Ireland Dublin
+europe Ireland cork
+europe Ireland Limerick
+europe Italy Rome
+europe Italy Milan
+europe Italy Venice
+europe Kosovo Pristina
+europe Kosovo Prizren
+europe Kosovo Peja
+europe Latvia Riga
+europe Latvia Daugavpils
+europe Latvia Liepāja
+europe Liechtenstein Vaduz
+europe Lithuania Vilnius
+europe Lithuania Kaunas
+europe Lithuania Klaipėda
+europe Luxembourg Luxembourg_city
+europe Malta Valletta
+europe Malta birkirkara
+europe Malta Qormi
+europe Moldova chisinau
+europe Moldova Tiraspol
+europe Moldova bălți
+europe Monaco Monaco
+europe Montenegro Podgorica
+europe Montenegro budva
+europe Montenegro Nikšić
+europe Netherlands amsterdam
+europe Netherlands Rotterdam
+europe Netherlands Utrecht
+europe North Macedonia Skopje
+europe North Macedonia bitola
+europe North Macedonia Tetovo
+europe Norway Oslo
+europe Norway bergen
+europe Norway Trondheim
+europe Poland Warsaw
+europe Poland Krakow
+europe Poland Gdansk
+europe Poland Szczecin Warszewo
+europe Poland Szczecin Centrum
+europe Poland Szczecin Turzyn
+europe Poland Szczecin Pogodno
+europe Poland Szczecin Gumience
+europe Poland Wroclaw
+europe Portugal Lisbon
+europe Portugal Porto
+europe Portugal Faro
+europe Romania bucharest
+europe Romania cluj-Napoca
+europe Romania Timișoara
+europe San Marino San Marino
+europe Serbia belgrade
+europe Serbia Novi Sad
+europe Serbia Niš
+europe Slovakia bratislava
+europe Slovakia Košice
+europe Slovakia Prešov
+europe Slovenia Ljubljana
+europe Slovenia Maribor
+europe Slovenia celje
+europe Spain Madrid
+europe Spain barcelona
+europe Spain Valencia
+europe Sweden Stockholm
+europe Sweden Gothenburg
+europe Sweden Malmö
+europe Switzerland bern
+europe Switzerland Zurich
+europe Switzerland Geneva
+europe Turkey ankara
+europe Turkey Istanbul
+europe Turkey Izmir
+europe Ukraine Kyiv
+europe Ukraine Lviv
+europe Ukraine Odessa
+europe United_Kingdom London
+europe United_Kingdom Manchester
+europe United_Kingdom Edinburgh
+europe Vatican_city Vatican city
