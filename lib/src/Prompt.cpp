@@ -4,6 +4,7 @@
 #include "Prompt.hpp"
 
 #define GREEN_COLOR "\033[32m"
+#define CYAN_COLOR "\033[36m"
 #define DEFAULT_COLOR "\033[0m"
 
 void Prompt::setNonCanonicalMode(void)
@@ -95,7 +96,8 @@ void Prompt::parseCommand(void)
 
     size_t cnt = 0;
     bool last = false;
-    for (auto &element : m_AuxMenu)
+
+    for (auto &element : m_AuxMenu) //check wether given input is found in command list
     {
         if (element.first.find(m_Input) != std::string::npos)
         {
@@ -103,6 +105,12 @@ void Prompt::parseCommand(void)
             if(getLastWord(element.first) == m_Input && cnt == 1)
                 last = true; // don't make prefix if the word is the last one, so it's the command actually
         }
+    }
+
+    if(cnt == 0)
+    {
+        printf("Unknown command\n");
+        return;
     }
 
     std::string updatestr ;
@@ -113,7 +121,18 @@ void Prompt::parseCommand(void)
 
     if (cnt >= 1 && m_Input.empty() == false && last == false && m_AuxMenu.find(updatestr) == m_AuxMenu.end())
     {
-        updateAuxMenu( updatestr);
+        bool found = false;
+        for (auto &element : m_AuxMenu)
+        {
+            if (element.first.find(m_Input + " ") != std::string::npos) // check wether this string is the full word
+            {
+                found = true;
+                break;
+            }
+        }
+        
+        if(found == true)
+            updateAuxMenu( updatestr);
 
         m_Input.clear();
         clear_line(20);
@@ -227,9 +246,9 @@ int Prompt::try_match(void)
 void Prompt::print(void)
 {
     if (m_Prefix.empty() == true)
-        printf("\r# %s", m_Input.c_str());
+        printf("\r%s[%s]%s > %s", CYAN_COLOR, m_Name.c_str(), DEFAULT_COLOR, m_Input.c_str());
     else
-        printf("\r%s%s%s # %s", GREEN_COLOR, m_Prefix.c_str(), DEFAULT_COLOR, m_Input.c_str());
+        printf("\r%s[%s] %s/%s%s > %s", CYAN_COLOR, m_Name.c_str(), GREEN_COLOR, m_Prefix.c_str(), DEFAULT_COLOR, m_Input.c_str());
 }
 
 void Prompt::updateAuxMenu(const std::string &prefix)

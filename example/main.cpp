@@ -60,7 +60,7 @@ void callback(std::string str)
 
 int main(int argc, char **argv)
 {
-    Prompt my_prompt;
+    Prompt my_prompt("AHU_2040");
 
     std::ifstream file(argv[1]);
     

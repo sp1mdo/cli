@@ -17,7 +17,8 @@ using Callback = std::function<void(std::string)>;
 class Prompt
 {
 public:
-    Prompt() {};
+    Prompt(const std::string &name) : m_Name(name)
+        {};
 
     void run(void);
     void push_back(char c);
@@ -34,6 +35,7 @@ public:
 private:
     std::string m_Input;
     std::string m_Prefix;
+    std::string m_Name;
     size_t countCharacterOccurrences(const std::string &input, char target);
     std::string getLastWord(const std::string &input);
     Tokens tokenize(const std::string &str);
