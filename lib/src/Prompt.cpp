@@ -229,7 +229,7 @@ void Prompt::parseCommand(void)
         }
     }
 
-    if (cnt == 0 && (executed == false || found == false))
+    if (cnt == 0 && (executed == false))
     {
         fprintf(stderr, "Unknown command\n");
     }
@@ -402,7 +402,7 @@ std::vector<std::string> Prompt::tokenize(const std::string &str)
     return tokens;
 }
 
-void Prompt::insertMapElement(const std::string &str, Callback cb)
+void Prompt::insertMapElement(std::string &&str, Callback cb)
 {
-    m_MainMenu.insert({str, cb});
+    m_MainMenu.emplace(std::move(str), cb);
 }

@@ -29,7 +29,7 @@ public:
     int try_match(void);
     void parseCommand(void);
 
-    void insertMapElement(const std::string &str, Callback cb);
+    void insertMapElement(std::string &&str, Callback cb);
     std::map<std::string, Callback> m_MainMenu;
     std::map<std::string, Callback> m_AuxMenu;
     void setNonCanonicalMode(void);
