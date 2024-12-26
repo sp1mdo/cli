@@ -7,9 +7,14 @@
 #define CYAN_COLOR "\033[36m"
 #define DEFAULT_COLOR "\033[0m"
 
+const std::string up_key = "\x1b\x5b\x41";
+const std::string down_key = "\x1b\x5b\x42";
+const std::string left_key = "\x1b\x5b\x44";
+const std::string right_key = "\x1b\x5b\x43";
+
 void Prompt::setNonCanonicalMode(void)
 {
-    #ifdef UNIX
+#ifdef UNIX
     struct termios newt, oldt;
 
     // Get the current terminal settings
@@ -25,7 +30,7 @@ void Prompt::setNonCanonicalMode(void)
 
     // Apply the new terminal settings
     tcsetattr(STDIN_FILENO, TCSANOW, &newt);
-    #endif
+#endif
 }
 
 void Prompt::run(void)
@@ -39,7 +44,7 @@ void Prompt::run(void)
             // printf("\r%02x\n", z); // debug purpose
             // continue;
 
-            if (z == 0x1b || (z == 0x7f && m_Input.empty() == true)) // esc
+            if ((z == 0x7f && m_Input.empty() == true)) // esc - todo hadle ESC in handle_special_chars
             {
                 updateAuxMenu("");
                 m_Prefix.clear();
@@ -63,7 +68,7 @@ void Prompt::run(void)
                 try_match();
             }
 
-            // handle_special_chars(index, input);
+            //handle_special_chars();
             if (z == 10) // newline //10 in Linux
             {
                 parseCommand();
@@ -76,6 +81,48 @@ void Prompt::run(void)
 void Prompt::debug(void)
 {
     printf("\n[%s] \n", m_Input.c_str());
+}
+void dumpString(const std::string & str)
+{
+    printf("\n[");
+    for(auto &xchar : str)
+    {
+        printf("%02x ",xchar);
+    }
+    printf("]\n");
+}
+
+void Prompt::handle_special_chars(void)
+{
+    //dumpString(m_Input);
+    if (m_Input.find(up_key) != std::string::npos)
+    {
+        if ((size_t)m_HistoryIndex > m_CommandHistory.size() - 1)
+            m_HistoryIndex = 0;
+
+        m_Input = m_CommandHistory[m_HistoryIndex];
+        m_HistoryIndex++;
+
+        return;
+    }
+    if (m_Input.find(down_key) != std::string::npos)
+    {
+        m_HistoryIndex--;
+        if (m_HistoryIndex < 0)
+            m_HistoryIndex = m_CommandHistory.size() - 1;
+
+        m_Input = m_CommandHistory[m_HistoryIndex];
+        
+
+        return;
+    }
+
+
+
+
+
+
+
 }
 
 bool Prompt::backspace(void) // todo void
@@ -146,10 +193,20 @@ void Prompt::parseCommand(void)
 
             m_AuxMenu.at(command)(args); // execute callabck with given args
             executed = true;
+
+            //Add good command to the command history
+            if (m_CommandHistory[0] != command)
+            {
+                m_CommandHistory.insert(m_CommandHistory.begin(), command);
+            }
+
+            if (m_CommandHistory.size() > 20) // Limit the command history size
+                m_CommandHistory.erase(m_CommandHistory.end());
+
             break;
         }
     }
-   
+
     if (cnt == 0 && (executed == false || found == false))
     {
         fprintf(stderr, "Unknown command\n");
@@ -255,6 +312,7 @@ void Prompt::print(void)
 void Prompt::updateAuxMenu(const std::string &prefix)
 {
     m_AuxMenu.clear();
+    m_CommandHistory.clear();
     for (auto &element : m_MainMenu)
     {
         if (element.first.find(prefix) == 0)
@@ -262,7 +320,7 @@ void Prompt::updateAuxMenu(const std::string &prefix)
             std::string newstr(element.first, prefix.size(), element.first.size());
             if (newstr[0] == ' ')
                 newstr.erase(newstr.begin());
-            // printf("%s\n",newstr.c_str());
+
             m_AuxMenu.insert({newstr, element.second});
         }
     }
@@ -274,7 +332,7 @@ void Prompt::updateAuxMenu(const std::string &prefix)
 
     if (m_AuxMenu.size() == 0)
     {
-        printf("oops!\n");
+        fprintf(stderr, "oops!\n");
         m_AuxMenu = m_MainMenu;
         m_Prefix.clear();
     }
