@@ -12,7 +12,8 @@
 #endif
 
 using Tokens = std::vector<std::string>;
-using Callback = std::function<void(std::string)>;
+//using Callback = std::function<void(std::string)>;
+using Callback = std::function<void(const std::string &)>;
 
 class Prompt
 {

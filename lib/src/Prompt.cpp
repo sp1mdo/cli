@@ -96,24 +96,26 @@ void Prompt::parseCommand(void)
 
     size_t cnt = 0;
     bool last = false;
+    bool found = false;
 
-    for (auto &element : m_AuxMenu) //check wether given input is found in command list
+    for (auto &element : m_AuxMenu) // check wether given input is found in command list
     {
+        if (element.first.find(m_Input + " ") != std::string::npos) // check wether this string is the full word
+        {
+            found = true;
+        }
+
         if (element.first.find(m_Input) != std::string::npos)
         {
-            cnt++; //TODO : make check if the word is not truncated, for example : po instead of poland
-            if(getLastWord(element.first) == m_Input && cnt == 1)
+            cnt++; // TODO : make check if the word is not truncated, for example : po instead of poland
+            if (getLastWord(element.first) == m_Input && cnt == 1)
                 last = true; // don't make prefix if the word is the last one, so it's the command actually
         }
     }
 
-    if(cnt == 0)
-    {
-        printf("Unknown command\n");
-        return;
-    }
 
-    std::string updatestr ;
+
+    std::string updatestr;
     if (m_Prefix.empty() == true)
         updatestr = m_Input;
     else
@@ -121,24 +123,15 @@ void Prompt::parseCommand(void)
 
     if (cnt >= 1 && m_Input.empty() == false && last == false && m_AuxMenu.find(updatestr) == m_AuxMenu.end())
     {
-        bool found = false;
-        for (auto &element : m_AuxMenu)
-        {
-            if (element.first.find(m_Input + " ") != std::string::npos) // check wether this string is the full word
-            {
-                found = true;
-                break;
-            }
-        }
-        
-        if(found == true)
-            updateAuxMenu( updatestr);
+        if (found == true)
+            updateAuxMenu(updatestr);
 
         m_Input.clear();
         clear_line(20);
         return;
     }
 
+    bool executed = false;
     for (size_t i = 0; i < m_Input.size(); i++)
     {
         std::string command(m_Input, 0, i + 1); // find a moment where the command is separated from the args
@@ -149,8 +142,14 @@ void Prompt::parseCommand(void)
                 args.erase(args.begin());
 
             m_AuxMenu.at(command)(args); // execute callabck with given args
+            executed = true;
             break;
         }
+    }
+
+    if (cnt == 0 && executed == false)
+    {
+        printf("Unknown command\n");
     }
 
     m_Input.clear();
