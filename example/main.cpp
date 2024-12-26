@@ -87,11 +87,6 @@ int main(int argc, char **argv)
    my_prompt.insertMapElement("azja gruzja tbilisi",    std::bind(callback, fun_id++ , std::placeholders::_1 ));
    my_prompt.insertMapElement("azja rosja moskwa",      std::bind(callback, fun_id++ , std::placeholders::_1 ));
 
-
-    my_prompt.setNonCanonicalMode();
-
-    my_prompt.updateAuxMenu("");
-
     my_prompt.run();
 
     return 0;

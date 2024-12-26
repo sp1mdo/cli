@@ -9,6 +9,7 @@
 
 void Prompt::setNonCanonicalMode(void)
 {
+    #ifdef UNIX
     struct termios newt, oldt;
 
     // Get the current terminal settings
@@ -24,10 +25,12 @@ void Prompt::setNonCanonicalMode(void)
 
     // Apply the new terminal settings
     tcsetattr(STDIN_FILENO, TCSANOW, &newt);
+    #endif
 }
 
 void Prompt::run(void)
 {
+    updateAuxMenu("");
     while (1)
     {
         print();
@@ -113,8 +116,6 @@ void Prompt::parseCommand(void)
         }
     }
 
-
-
     std::string updatestr;
     if (m_Prefix.empty() == true)
         updatestr = m_Input;
@@ -125,6 +126,8 @@ void Prompt::parseCommand(void)
     {
         if (found == true)
             updateAuxMenu(updatestr);
+        else
+            fprintf(stderr, "Unknown command\n");
 
         m_Input.clear();
         clear_line(20);
@@ -146,10 +149,10 @@ void Prompt::parseCommand(void)
             break;
         }
     }
-
-    if (cnt == 0 && executed == false)
+   
+    if (cnt == 0 && (executed == false || found == false))
     {
-        printf("Unknown command\n");
+        fprintf(stderr, "Unknown command\n");
     }
 
     m_Input.clear();
@@ -237,7 +240,6 @@ int Prompt::try_match(void)
 
     if (matches.size() == 1)
         m_Input = *(matches.begin());
-    printf("\n");
 
     return match_count;
 }

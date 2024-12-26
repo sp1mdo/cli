@@ -12,14 +12,15 @@
 #endif
 
 using Tokens = std::vector<std::string>;
-//using Callback = std::function<void(std::string)>;
 using Callback = std::function<void(const std::string &)>;
 
 class Prompt
 {
 public:
     Prompt(const std::string &name) : m_Name(name)
-        {};
+        {
+            setNonCanonicalMode();
+        };
 
     void run(void);
     void push_back(char c);
@@ -37,10 +38,11 @@ private:
     std::string m_Input;
     std::string m_Prefix;
     std::string m_Name;
+    Tokens m_CommandHistory;
     size_t countCharacterOccurrences(const std::string &input, char target);
     std::string getLastWord(const std::string &input);
     Tokens tokenize(const std::string &str);
-    std::string tokensToString(Tokens &tokens, bool space);
+    std::string tokensToString(Tokens &tokens, bool space); // not used ?
     std::string printTokens(const Tokens &tokens);
     void clear_line(size_t chars);
     void debug(void);
