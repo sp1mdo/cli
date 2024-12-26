@@ -17,10 +17,9 @@ using Callback = std::function<void(const std::string &)>;
 class Prompt
 {
 public:
-    Prompt(const std::string &name) : m_Name(name) , m_HistoryIndex(0)
+    Prompt(const std::string &name) : m_Name(name) , m_HistoryIndex(-1)
         {
             setNonCanonicalMode();
-            m_CommandHistory.push_back("");
         };
 
     void run(void);
@@ -41,7 +40,7 @@ private:
     std::string m_Name;
     Tokens m_CommandHistory;
     int m_HistoryIndex;
-    void handle_special_chars(void);
+    bool handleSpecialCharacters(void);
     size_t countCharacterOccurrences(const std::string &input, char target);
     std::string getLastWord(const std::string &input);
     Tokens tokenize(const std::string &str);

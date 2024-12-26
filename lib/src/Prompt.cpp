@@ -44,7 +44,7 @@ void Prompt::run(void)
             // printf("\r%02x\n", z); // debug purpose
             // continue;
 
-            if ((z == 0x7f && m_Input.empty() == true)) // esc - todo hadle ESC in handle_special_chars
+            if ((z == 0x7f && m_Input.empty() == true)) // esc - todo hadle ESC in handleSpecialCharacters
             {
                 updateAuxMenu("");
                 m_Prefix.clear();
@@ -68,7 +68,7 @@ void Prompt::run(void)
                 try_match();
             }
 
-            //handle_special_chars();
+            handleSpecialCharacters();
             if (z == 10) // newline //10 in Linux
             {
                 parseCommand();
@@ -82,47 +82,63 @@ void Prompt::debug(void)
 {
     printf("\n[%s] \n", m_Input.c_str());
 }
-void dumpString(const std::string & str)
+
+void dumpString(const std::string &str)
 {
     printf("\n[");
-    for(auto &xchar : str)
+    for (auto &xchar : str)
     {
-        printf("%02x ",xchar);
+        printf("%02x ", xchar);
     }
     printf("]\n");
 }
 
-void Prompt::handle_special_chars(void)
+bool Prompt::handleSpecialCharacters(void)
 {
-    //dumpString(m_Input);
+    // dumpString(m_Input);
     if (m_Input.find(up_key) != std::string::npos)
     {
-        if ((size_t)m_HistoryIndex > m_CommandHistory.size() - 1)
-            m_HistoryIndex = 0;
+        if (m_CommandHistory.empty() == true)
+        {
+            m_Input.clear();
+            printf("\n");
+            return true;
+        }
+        m_HistoryIndex++;
+        if (m_HistoryIndex >= 0)
+        {
+            if (m_HistoryIndex >= (int)m_CommandHistory.size())
+                m_HistoryIndex = m_CommandHistory.size() - 1;
+        }
 
         m_Input = m_CommandHistory[m_HistoryIndex];
-        m_HistoryIndex++;
 
-        return;
+        printf("\n");
+        clear_line(30);
+        return true;
     }
     if (m_Input.find(down_key) != std::string::npos)
     {
+        if (m_CommandHistory.empty() == true)
+        {
+            m_Input.clear();
+            return true;
+        }
+
         m_HistoryIndex--;
         if (m_HistoryIndex < 0)
-            m_HistoryIndex = m_CommandHistory.size() - 1;
+        {
+            m_Input.clear();
+            m_HistoryIndex = -1;
+        }
+        else
+            m_Input = m_CommandHistory[m_HistoryIndex];
 
-        m_Input = m_CommandHistory[m_HistoryIndex];
-        
-
-        return;
+        clear_line(30);
+        return true;
     }
 
-
-
-
-
-
-
+    return false;
 }
 
 bool Prompt::backspace(void) // todo void
@@ -169,7 +185,8 @@ void Prompt::parseCommand(void)
     else
         updatestr = m_Prefix + " " + m_Input;
 
-    if (cnt >= 1 && m_Input.empty() == false && last == false && m_AuxMenu.find(updatestr) == m_AuxMenu.end())
+    // Check if given string matches to move into relative path of the menu
+    if (cnt >= 1 && m_Input.empty() == false && last == false && m_AuxMenu.find(m_Input) == m_AuxMenu.end())
     {
         if (found == true)
             updateAuxMenu(updatestr);
@@ -194,11 +211,16 @@ void Prompt::parseCommand(void)
             m_AuxMenu.at(command)(args); // execute callabck with given args
             executed = true;
 
-            //Add good command to the command history
-            if (m_CommandHistory[0] != command)
+            // Add good command to the command history
+            if (m_CommandHistory.size() >= 1)
             {
-                m_CommandHistory.insert(m_CommandHistory.begin(), command);
+                if (m_CommandHistory[0] != command)
+                {
+                    m_CommandHistory.insert(m_CommandHistory.begin(), command);
+                }
             }
+            else
+                m_CommandHistory.insert(m_CommandHistory.begin(), command);
 
             if (m_CommandHistory.size() > 20) // Limit the command history size
                 m_CommandHistory.erase(m_CommandHistory.end());
@@ -313,6 +335,7 @@ void Prompt::updateAuxMenu(const std::string &prefix)
 {
     m_AuxMenu.clear();
     m_CommandHistory.clear();
+    m_HistoryIndex = -1;
     for (auto &element : m_MainMenu)
     {
         if (element.first.find(prefix) == 0)

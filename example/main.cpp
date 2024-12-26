@@ -10,18 +10,8 @@
 
 #include "../lib/inc/Prompt.hpp"
 
-#define STR_TO_LOWER(str)                     \
-    do                                        \
-    {                                         \
-        for (int i = 0; i < strlen(str); i++) \
-            str[i] = tolower(str[i]);         \
-    } while (0);
-
 #define GREEN_COLOR "\033[32m"
 #define DEFAULT_COLOR "\033[0m"
-
-
-std::map<std::string, std::function<void()>> MyMenu;
 
 void callback(int id, const std::string &str)
 {
@@ -33,7 +23,7 @@ int main(int argc, char **argv)
     Prompt my_prompt("AHU_2040");
 
     std::ifstream file(argv[1]);
-    
+
     // Check if the file was successfully opened
     /*
     if (!file.is_open())
@@ -49,13 +39,13 @@ int main(int argc, char **argv)
         my_prompt.insertMapElement(line, callback);
     }
     */
-   int fun_id = 0;
-   my_prompt.insertMapElement("europa polska szczecin", std::bind(callback, fun_id++ , std::placeholders::_1 ));
-   my_prompt.insertMapElement("europa polska wroclaw",  std::bind(callback, fun_id++ , std::placeholders::_1 ));
-   my_prompt.insertMapElement("europa polska poznan",   std::bind(callback, fun_id++ , std::placeholders::_1 ));
-   my_prompt.insertMapElement("afryka maroko tanger",   std::bind(callback, fun_id++ , std::placeholders::_1 ));
-   my_prompt.insertMapElement("azja gruzja tbilisi",    std::bind(callback, fun_id++ , std::placeholders::_1 ));
-   my_prompt.insertMapElement("azja rosja moskwa",      std::bind(callback, fun_id++ , std::placeholders::_1 ));
+    int fun_id = 0;
+    my_prompt.insertMapElement("europa polska szczecin", std::bind(callback, fun_id++, std::placeholders::_1));
+    my_prompt.insertMapElement("europa polska wroclaw", std::bind(callback, fun_id++, std::placeholders::_1));
+    my_prompt.insertMapElement("europa polska poznan", std::bind(callback, fun_id++, std::placeholders::_1));
+    my_prompt.insertMapElement("afryka maroko tanger", std::bind(callback, fun_id++, std::placeholders::_1));
+    my_prompt.insertMapElement("azja gruzja tbilisi", std::bind(callback, fun_id++, std::placeholders::_1));
+    my_prompt.insertMapElement("azja rosja moskwa", std::bind(callback, fun_id++, std::placeholders::_1));
 
     my_prompt.run();
 
