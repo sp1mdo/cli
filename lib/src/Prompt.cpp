@@ -12,6 +12,16 @@ const std::string down_key = "\x1b\x5b\x42";
 const std::string left_key = "\x1b\x5b\x44";
 const std::string right_key = "\x1b\x5b\x43";
 
+#ifdef UNIX
+const char newline_char = 10;
+const char backspace_char = 0x7f;
+#elif PICO_ON_DEVICE // for example VT102 serial terminal
+#warning "this is pico project"
+const char newline_char = 13;
+const char backspace_char = 0x08;
+#endif
+const char tab_char = 0x09;
+
 void Prompt::setNonCanonicalMode(void)
 {
 #ifdef UNIX
@@ -36,40 +46,47 @@ void Prompt::setNonCanonicalMode(void)
 void Prompt::run(void)
 {
     updateAuxMenu("");
+    print();
     while (1)
     {
-        print();
         char z = getc(stdin);
         {
+            bool special_handling = false;
             // printf("\r%02x\n", z); // debug purpose
             // continue;
 
-            if ((z == 0x7f && m_Input.empty() == true)) // esc - todo hadle ESC in handleSpecialCharacters
+            if ((z == backspace_char && m_Input.empty() == true && m_Prefix.empty() == false)) // esc - todo hadle ESC in handleSpecialCharacters
             {
-                updateAuxMenu("");
-                m_Prefix.clear();
+                removeLastWord(m_Prefix);
+                updateAuxMenu(m_Prefix);
+                //m_Prefix.clear();
                 m_Input.clear();
                 clear_line(20);
+                print();
                 continue;
             }
-            if (z != 9 && z != 0x7f) // any valid char, but not tab
+
+            if (z != tab_char) // any valid char, but not tab
             {
                 m_Input.push_back(z);
+                special_handling= handleSpecialCharacters();
+            }
+            size_t num;
+            if (z == backspace_char) // backspace
+            {
+                backspace();
+            }
+            else if (z == tab_char) // tab
+            {
+                num = try_match();
+            }
+
+            if (z != tab_char || num > 0 || special_handling)
+            {
                 print();
             }
 
-            if (z == 0x7f) // backspace
-            {
-                backspace();
-                continue;
-            }
-            else if (z == 9) // tab
-            {
-                try_match();
-            }
-
-            handleSpecialCharacters();
-            if (z == 10) // newline //10 in Linux
+            if (z == newline_char) // newline //10 in Linux
             {
                 parseCommand();
                 print();
@@ -93,6 +110,18 @@ void dumpString(const std::string &str)
     printf("]\n");
 }
 
+void Prompt::removeLastWord(std::string &str)
+{
+    while(str.empty() == false)
+    {
+        if(str.back() == ' ')
+            break;
+
+        str.pop_back();
+    }
+    str.pop_back();
+}
+
 bool Prompt::handleSpecialCharacters(void)
 {
     // dumpString(m_Input);
@@ -101,7 +130,7 @@ bool Prompt::handleSpecialCharacters(void)
         if (m_CommandHistory.empty() == true)
         {
             m_Input.clear();
-            printf("\n");
+            //printf("\n");
             return true;
         }
         m_HistoryIndex++;
@@ -114,14 +143,16 @@ bool Prompt::handleSpecialCharacters(void)
         m_Input = m_CommandHistory[m_HistoryIndex];
 
         printf("\n");
-        clear_line(30);
+        clear_line(50);
         return true;
     }
     if (m_Input.find(down_key) != std::string::npos)
     {
+        clear_line(50);
         if (m_CommandHistory.empty() == true)
         {
             m_Input.clear();
+            clear_line(50);
             return true;
         }
 
@@ -129,12 +160,13 @@ bool Prompt::handleSpecialCharacters(void)
         if (m_HistoryIndex < 0)
         {
             m_Input.clear();
+            clear_line(50);
             m_HistoryIndex = -1;
         }
         else
             m_Input = m_CommandHistory[m_HistoryIndex];
 
-        clear_line(30);
+        
         return true;
     }
 
@@ -149,6 +181,10 @@ bool Prompt::backspace(void) // todo void
     {
         m_Input.pop_back();
     }
+    if (m_Input.size() > 0)
+    {
+        m_Input.pop_back();
+    }
 
     clear_line(20);
 
@@ -157,25 +193,28 @@ bool Prompt::backspace(void) // todo void
 
 void Prompt::parseCommand(void)
 {
-    while (m_Input.back() == ' ' || m_Input.back() == 0x0a) // trim all newline chars and spaces at the end of input str
+    while (m_Input.back() == ' ' || m_Input.back() == newline_char) // trim all newline chars and spaces at the end of input str
         m_Input.pop_back();
 
     size_t cnt = 0;
     bool last = false;
     bool found = false;
 
-    for (auto &element : m_AuxMenu) // check wether given input is found in command list
+    // Check whether given input is found in command list
+    for (auto &element : m_AuxMenu)
     {
-        if (element.first.find(m_Input + " ") != std::string::npos) // check wether this string is the full word
+        // Check whether this string is the full word
+        if (element.first.find(m_Input + " ") != std::string::npos)
         {
             found = true;
         }
 
         if (element.first.find(m_Input) != std::string::npos)
         {
-            cnt++; // TODO : make check if the word is not truncated, for example : po instead of poland
+            cnt++;
+            // Don't make prefix if the word is the last one, so it's the command actually
             if (getLastWord(element.first) == m_Input && cnt == 1)
-                last = true; // don't make prefix if the word is the last one, so it's the command actually
+                last = true;
         }
     }
 
@@ -201,30 +240,33 @@ void Prompt::parseCommand(void)
     bool executed = false;
     for (size_t i = 0; i < m_Input.size(); i++)
     {
-        std::string command(m_Input, 0, i + 1); // find a moment where the command is separated from the args
+        // Find a place, where the command is separated from the args
+        std::string command(m_Input, 0, i + 1);
         if (m_AuxMenu.find(command) != m_AuxMenu.end())
         {
             std::string args(m_Input, i + 1, sizeof(m_Input));
             while (args.front() == ' ')
                 args.erase(args.begin());
 
-            m_AuxMenu.at(command)(args); // execute callabck with given args
+            // Execute callabck with given args
+            m_AuxMenu.at(command)(args);
             executed = true;
 
             // Add good command to the command history
             if (m_CommandHistory.size() >= 1)
             {
-                if (m_CommandHistory[0] != command)
+                if (m_CommandHistory[0] != command + " " + args)
                 {
-                    m_CommandHistory.insert(m_CommandHistory.begin(), command);
+                    m_CommandHistory.insert(m_CommandHistory.begin(), command + " " + args);
                 }
             }
             else
-                m_CommandHistory.insert(m_CommandHistory.begin(), command);
+                m_CommandHistory.insert(m_CommandHistory.begin(), command + " " + args);
 
             if (m_CommandHistory.size() > 20) // Limit the command history size
                 m_CommandHistory.erase(m_CommandHistory.end());
 
+            m_HistoryIndex = -1;
             break;
         }
     }
@@ -235,7 +277,7 @@ void Prompt::parseCommand(void)
     }
 
     m_Input.clear();
-    clear_line(20);
+    clear_line(50);
 }
 
 void Prompt::clear_line(size_t chars)
@@ -297,6 +339,50 @@ std::string Prompt::getLastWord(const std::string &input)
     return std::string(start, end);
 }
 
+// Function to determine the number of identical first characters shared by all strings in the set
+size_t Prompt::countCommonPrefixLength(const std::set<std::string> &stringSet)
+{
+    if (stringSet.empty())
+    {
+        return 0; // No strings, no common prefix
+    }
+
+    // Take the first string as a reference to compare others
+    const std::string &firstString = *stringSet.begin();
+
+    // Initialize the common prefix length to the length of the first string
+    size_t commonLength = firstString.length();
+
+    // Iterate through the set to compare each string
+    for (const auto &str : stringSet)
+    {
+        // Find the common prefix length between the current string and the reference
+        size_t currentCommonLength = 0;
+        for (size_t i = 0; i < std::min(commonLength, str.length()); ++i)
+        {
+            if (firstString[i] == str[i])
+            {
+                ++currentCommonLength;
+            }
+            else
+            {
+                break;
+            }
+        }
+
+        // Update the common length
+        commonLength = currentCommonLength;
+
+        // Early exit if no common prefix remains
+        if (commonLength == 0)
+        {
+            break;
+        }
+    }
+
+    return commonLength;
+}
+
 int Prompt::try_match(void)
 {
     int match_count = 0;
@@ -308,17 +394,30 @@ int Prompt::try_match(void)
         if (element.first.find(m_Input) == 0)
         {
             // chars_matching = m_Input.size();
+            match_count++;
             matches.emplace(getFirstNWords(element.first, countCharacterOccurrences(m_Input, ' ') + 1) + " ");
         }
     }
-    printf("\n");
+    if (match_count)
+        printf("\n");
+
     for (auto &element : matches)
     {
         printf("\t%s \n", getLastWord(element).c_str());
     }
 
     if (matches.size() == 1)
+    {
         m_Input = *(matches.begin());
+        return match_count;
+    }
+    const std::string &refStr = *(matches.begin());
+
+    // Determine if next chars are all the same so we could complete them
+    auto num = countCommonPrefixLength(matches);
+
+    if (num)
+        m_Input = refStr.substr(0, num); // dummy line
 
     return match_count;
 }
@@ -326,11 +425,12 @@ int Prompt::try_match(void)
 void Prompt::print(void)
 {
     if (m_Prefix.empty() == true)
-        printf("\r%s[%s]%s > %s", CYAN_COLOR, m_Name.c_str(), DEFAULT_COLOR, m_Input.c_str());
+        printf("\r%s[%s][%d]%s > %s", CYAN_COLOR, m_Name.c_str(), m_HistoryIndex, DEFAULT_COLOR, m_Input.c_str());
     else
         printf("\r%s[%s] %s/%s%s > %s", CYAN_COLOR, m_Name.c_str(), GREEN_COLOR, m_Prefix.c_str(), DEFAULT_COLOR, m_Input.c_str());
 }
 
+// Generate auxiliary menu from given starting point
 void Prompt::updateAuxMenu(const std::string &prefix)
 {
     m_AuxMenu.clear();
@@ -355,54 +455,22 @@ void Prompt::updateAuxMenu(const std::string &prefix)
 
     if (m_AuxMenu.size() == 0)
     {
-        fprintf(stderr, "oops!\n");
         m_AuxMenu = m_MainMenu;
         m_Prefix.clear();
     }
 }
 
-std::string Prompt::tokensToString(Tokens &tokens, bool space)
-{
-    std::string ret;
-    for (auto &token : tokens)
-    {
-        ret = ret + token;
-        if (space)
-            ret = ret + ' ';
-    }
-    if (space)
-        ret.pop_back();
-    return ret;
-}
-
-std::string Prompt::printTokens(const std::vector<std::string> &tokens)
-{
-    std::string ret;
-    for (auto &token : tokens)
-    {
-        ret = ret + token + ":";
-    }
-    return ret;
-}
-
-std::vector<std::string> Prompt::tokenize(const std::string &str)
-{
-    std::vector<std::string> tokens;
-    if (str == " ")
-    {
-        return tokens;
-    }
-    char *token = strtok((char *)str.c_str(), " - ");
-
-    while (token != NULL)
-    {
-        tokens.push_back(std::string(token));
-        token = strtok(NULL, " ");
-    }
-    return tokens;
-}
-
 void Prompt::insertMapElement(std::string &&str, Callback cb)
 {
     m_MainMenu.emplace(std::move(str), cb);
+}
+
+void Prompt::setSpecialCharsHandling(bool flag)
+{
+    m_SpecialCharsHandling = flag;
+}
+
+bool Prompt::isSpecialCharsHandlingEnabled(void)
+{
+    return m_SpecialCharsHandling;
 }

@@ -22,10 +22,10 @@ int main(int argc, char **argv)
 {
     Prompt my_prompt("AHU_2040");
 
-    std::ifstream file(argv[1]);
-
-    // Check if the file was successfully opened
     /*
+    std::ifstream file(argv[1]);
+    // Check if the file was successfully opened
+    
     if (!file.is_open())
     {
         fprintf(stderr, "Failed to open the file.");
@@ -40,9 +40,10 @@ int main(int argc, char **argv)
     }
     */
     int fun_id = 0;
-    my_prompt.insertMapElement("europa polska szczecin", std::bind(callback, fun_id++, std::placeholders::_1));
-    my_prompt.insertMapElement("europa polska wroclaw", std::bind(callback, fun_id++, std::placeholders::_1));
+    my_prompt.insertMapElement("europa polsza szczecin", std::bind(callback, fun_id++, std::placeholders::_1));
+    my_prompt.insertMapElement("europa poland wroclaw", std::bind(callback, fun_id++, std::placeholders::_1));
     my_prompt.insertMapElement("europa polska poznan", std::bind(callback, fun_id++, std::placeholders::_1));
+    my_prompt.insertMapElement("europa portugalia lisbona", std::bind(callback, fun_id++, std::placeholders::_1));
     my_prompt.insertMapElement("afryka maroko tanger", std::bind(callback, fun_id++, std::placeholders::_1));
     my_prompt.insertMapElement("azja gruzja tbilisi", std::bind(callback, fun_id++, std::placeholders::_1));
     my_prompt.insertMapElement("azja rosja moskwa", std::bind(callback, fun_id++, std::placeholders::_1));
