@@ -1,8 +1,13 @@
 #include <cstring>
 #include <sstream>
+#include <vector>
 #include <set>
 #include "Prompt.hpp"
-
+#if defined PICO_ON_DEVICE
+#include "pico/time.h"
+#include "pico/error.h"
+#include "pico/stdio.h"
+#endif
 #define GREEN_COLOR "\033[32m"
 #define CYAN_COLOR "\033[36m"
 #define DEFAULT_COLOR "\033[0m"
@@ -15,12 +20,28 @@ const std::string right_key = "\x1b\x5b\x43";
 #ifdef UNIX
 const char newline_char = 10;
 const char backspace_char = 0x7f;
-#elif PICO_ON_DEVICE // for example VT102 serial terminal
+#elif defined PICO_ON_DEVICE
 #warning "this is pico project"
 const char newline_char = 13;
 const char backspace_char = 0x08;
 #endif
 const char tab_char = 0x09;
+
+uint32_t alloc_count = 0;
+// 536948456 - max memory before dead
+
+void *operator new(size_t size)
+{
+    // alloc_count++;
+    void *p = malloc(size);
+    alloc_count++;
+    return p;
+}
+
+void operator delete(void *p)
+{
+    free(p);
+}
 
 void Prompt::setNonCanonicalMode(void)
 {
@@ -59,7 +80,7 @@ void Prompt::run(void)
             {
                 removeLastWord(m_Prefix);
                 updateAuxMenu(m_Prefix);
-                //m_Prefix.clear();
+                // m_Prefix.clear();
                 m_Input.clear();
                 clear_line(20);
                 print();
@@ -69,7 +90,7 @@ void Prompt::run(void)
             if (z != tab_char) // any valid char, but not tab
             {
                 m_Input.push_back(z);
-                special_handling= handleSpecialCharacters();
+                special_handling = handleSpecialCharacters();
             }
             size_t num;
             if (z == backspace_char) // backspace
@@ -112,9 +133,9 @@ void dumpString(const std::string &str)
 
 void Prompt::removeLastWord(std::string &str)
 {
-    while(str.empty() == false)
+    while (str.empty() == false)
     {
-        if(str.back() == ' ')
+        if (str.back() == ' ')
             break;
 
         str.pop_back();
@@ -130,7 +151,7 @@ bool Prompt::handleSpecialCharacters(void)
         if (m_CommandHistory.empty() == true)
         {
             m_Input.clear();
-            //printf("\n");
+            // printf("\n");
             return true;
         }
         m_HistoryIndex++;
@@ -166,7 +187,6 @@ bool Prompt::handleSpecialCharacters(void)
         else
             m_Input = m_CommandHistory[m_HistoryIndex];
 
-        
         return true;
     }
 
@@ -204,7 +224,7 @@ void Prompt::parseCommand(void)
     for (auto &element : m_AuxMenu)
     {
         // Check whether this string is the full word
-        if (element.first.find(m_Input + " ") != std::string::npos)
+        if (element.first.find(m_Input + " ") == 0)
         {
             found = true;
         }
@@ -230,7 +250,7 @@ void Prompt::parseCommand(void)
         if (found == true)
             updateAuxMenu(updatestr);
         else
-            fprintf(stderr, "Unknown command\n");
+            fprintf(stderr, "\nUnknown command\n");
 
         m_Input.clear();
         clear_line(20);
@@ -249,6 +269,7 @@ void Prompt::parseCommand(void)
                 args.erase(args.begin());
 
             // Execute callabck with given args
+            printf("\n");
             m_AuxMenu.at(command)(args);
             executed = true;
 
@@ -383,19 +404,81 @@ size_t Prompt::countCommonPrefixLength(const std::set<std::string> &stringSet)
     return commonLength;
 }
 
+size_t Prompt::countCommonPrefixLength(const std::vector<std::string> &stringSet)
+{
+    if (stringSet.empty())
+    {
+        return 0; // No strings, no common prefix
+    }
+
+    // Take the first string as a reference to compare others
+    const std::string &firstString = *stringSet.begin();
+
+    // Initialize the common prefix length to the length of the first string
+    size_t commonLength = firstString.length();
+
+    // Iterate through the set to compare each string
+    for (const auto &str : stringSet)
+    {
+        // Find the common prefix length between the current string and the reference
+        size_t currentCommonLength = 0;
+        for (size_t i = 0; i < std::min(commonLength, str.length()); ++i)
+        {
+            if (firstString[i] == str[i])
+            {
+                ++currentCommonLength;
+            }
+            else
+            {
+                break;
+            }
+        }
+
+        // Update the common length
+        commonLength = currentCommonLength;
+
+        // Early exit if no common prefix remains
+        if (commonLength == 0)
+        {
+            break;
+        }
+    }
+
+    return commonLength;
+}
+
+template <typename T>
+void add_unique(std::vector<T> &uniqueVector, T&& element)
+{
+    // Check if the value already exists in the vector
+    if (std::find(uniqueVector.begin(), uniqueVector.end(), element) == uniqueVector.end())
+    {
+        uniqueVector.emplace_back(std::move(element));
+    }
+}
+
+template <typename T>
+void add_unique(std::set<T> &uniqueSet, T &&element)
+{
+    uniqueSet.emplace(std::move(element));
+}
+
 int Prompt::try_match(void)
 {
     int match_count = 0;
-    std::vector<int> matching_indexes;
-    std::set<std::string> matches;
-
+    // It takes less allocations using vector instead of set, with additional
+    // handling of uniqueness
+    //std::set<std::string> matches;
+    std::vector<std::string> matches;
+    matches.reserve(12);
     for (auto &element : m_AuxMenu)
     {
         if (element.first.find(m_Input) == 0)
         {
             // chars_matching = m_Input.size();
             match_count++;
-            matches.emplace(getFirstNWords(element.first, countCharacterOccurrences(m_Input, ' ') + 1) + " ");
+            std::string Nwords = getFirstNWords(element.first, countCharacterOccurrences(m_Input, ' ') + 1) + " ";
+            add_unique(matches, std::move(Nwords));
         }
     }
     if (match_count)
@@ -425,9 +508,9 @@ int Prompt::try_match(void)
 void Prompt::print(void)
 {
     if (m_Prefix.empty() == true)
-        printf("\r%s[%s][%d]%s > %s", CYAN_COLOR, m_Name.c_str(), m_HistoryIndex, DEFAULT_COLOR, m_Input.c_str());
+        printf("\r%s[%s][%u]%s > %s", CYAN_COLOR, m_Name.c_str(), alloc_count, DEFAULT_COLOR, m_Input.c_str());
     else
-        printf("\r%s[%s] %s/%s%s > %s", CYAN_COLOR, m_Name.c_str(), GREEN_COLOR, m_Prefix.c_str(), DEFAULT_COLOR, m_Input.c_str());
+        printf("\r%s[%s][%u] %s/%s%s > %s", CYAN_COLOR, m_Name.c_str(), alloc_count, GREEN_COLOR, m_Prefix.c_str(), DEFAULT_COLOR, m_Input.c_str());
 }
 
 // Generate auxiliary menu from given starting point
