@@ -10,9 +10,6 @@
 
 #include "Prompt.hpp"
 
-#define GREEN_COLOR "\033[32m"
-#define DEFAULT_COLOR "\033[0m"
-
 void callback(int id, const std::string &str)
 {
     printf("Received : id=%d arg=[%s] \n ", id, str.c_str());
@@ -27,7 +24,7 @@ int main(int argc, char **argv)
     // Check if the file was successfully opened
     if (!file.is_open())
     {
-        fprintf(stderr, "Failed to open the file.");
+        fprintf(stderr, "Failed to open the file.\n");
         return 1;
     }
  int fun_id = 0;
@@ -37,12 +34,8 @@ int main(int argc, char **argv)
         std::transform(line.begin(), line.end(), line.begin(),  [](unsigned char c){ return std::tolower(c); });
         my_prompt.insertMapElement(std::move(line), std::bind(callback, fun_id++, std::placeholders::_1));
     }
-    
-   
 
 
-
-    my_prompt.updateAuxMenu("");
 
     my_prompt.run();
 

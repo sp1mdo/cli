@@ -136,6 +136,7 @@ public:
     Prompt(const std::string &name) : m_Name(name), m_HistoryIndex(-1), m_SpecialCharsHandling(true)
     {
         setNonCanonicalMode();
+        updateAuxMenu("");
     };
 
     void run(void);
