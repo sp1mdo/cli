@@ -41,7 +41,7 @@ int main(int argc, char **argv)
     */
     int fun_id = 0;
 
-    my_prompt.m_MainMenu.reserve(50);
+    //my_prompt.m_MainMenu.reserve(50);
     my_prompt.insertMapElement("settings show", std::bind(callback, 0, std::placeholders::_1));
     my_prompt.insertMapElement("settings save", std::bind(callback, 0, std::placeholders::_1));
     my_prompt.insertMapElement("settings read", std::bind(callback, 0, std::placeholders::_1));
@@ -82,13 +82,6 @@ int main(int argc, char **argv)
     my_prompt.insertMapElement("oil set interval", std::bind(callback, 0, std::placeholders::_1));
     my_prompt.insertMapElement("oil set target_frequency", std::bind(callback, 0, std::placeholders::_1));
 
-#ifdef DEVELOPER
-    my_prompt.insertMapElement("expert enable", std::bind(callback, fun_id++, std::placeholders::_1));
-    my_prompt.insertMapElement("expert disable", std::bind(callback, fun_id++, std::placeholders::_1));
-    my_prompt.insertMapElement("expert set compressor frequency", std::bind(callback, fun_id++, std::placeholders::_1));
-    my_prompt.insertMapElement("expert set fan frequency", std::bind(callback, fun_id++, std::placeholders::_1));
-    my_prompt.insertMapElement("expert set eev position", std::bind(callback, fun_id++, std::placeholders::_1));
-#endif
 
     my_prompt.updateAuxMenu("");
 

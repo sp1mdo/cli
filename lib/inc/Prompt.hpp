@@ -150,11 +150,11 @@ public:
     void setSpecialCharsHandling(bool flag);
     bool isSpecialCharsHandlingEnabled(void);
 
-    //std::map<std::string, Callback> m_MainMenu;
-    //std::map<std::string, Callback> m_AuxMenu;
+    std::map<std::string, Callback> m_MainMenu;
+    std::map<std::string, Callback> m_AuxMenu;
 
-    Flat_Map<std::string, Callback> m_MainMenu;
-    Flat_Map<std::string, Callback> m_AuxMenu;
+    //Flat_Map<std::string, Callback> m_MainMenu;
+    //Flat_Map<std::string, Callback> m_AuxMenu;
 
 private:
     std::string m_Input;
@@ -170,6 +170,7 @@ private:
     size_t countCharacterOccurrences(const std::string &input, char target);
     std::string getLastWord(const std::string &input);
     void clear_line(size_t chars);
+    void clear_line_fwd(size_t chars);
     void debug(void);
     std::string getFirstNWords(const std::string &input, size_t N);
 };

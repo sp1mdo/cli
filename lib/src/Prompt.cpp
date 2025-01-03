@@ -91,6 +91,13 @@ void Prompt::run(void)
             {
                 m_Input.push_back(z);
                 special_handling = handleSpecialCharacters();
+                if(special_handling)
+                {
+                    print();
+                    clear_line_fwd(50);
+                    continue;
+                }
+                
             }
             size_t num;
             if (z == backspace_char) // backspace
@@ -102,7 +109,7 @@ void Prompt::run(void)
                 num = try_match();
             }
 
-            if (z != tab_char || num > 0 || special_handling)
+            if (z != tab_char || num > 0)
             {
                 print();
             }
@@ -163,17 +170,15 @@ bool Prompt::handleSpecialCharacters(void)
 
         m_Input = m_CommandHistory[m_HistoryIndex];
 
-        printf("\n");
+        // printf("\n");
         clear_line(50);
         return true;
     }
     if (m_Input.find(down_key) != std::string::npos)
     {
-        clear_line(50);
         if (m_CommandHistory.empty() == true)
         {
             m_Input.clear();
-            clear_line(50);
             return true;
         }
 
@@ -181,11 +186,12 @@ bool Prompt::handleSpecialCharacters(void)
         if (m_HistoryIndex < 0)
         {
             m_Input.clear();
-            clear_line(50);
             m_HistoryIndex = -1;
         }
         else
+        {
             m_Input = m_CommandHistory[m_HistoryIndex];
+        }
 
         return true;
     }
@@ -299,6 +305,14 @@ void Prompt::parseCommand(void)
 
     m_Input.clear();
     clear_line(50);
+}
+
+void Prompt::clear_line_fwd(size_t chars)
+{
+    for (size_t i = 0; i < chars; i++)
+        printf(" ");
+    for (size_t i = 0; i < chars; i++)
+        printf("\b");
 }
 
 void Prompt::clear_line(size_t chars)
@@ -448,7 +462,7 @@ size_t Prompt::countCommonPrefixLength(const std::vector<std::string> &stringSet
 }
 
 template <typename T>
-void add_unique(std::vector<T> &uniqueVector, T&& element)
+void add_unique(std::vector<T> &uniqueVector, T &&element)
 {
     // Check if the value already exists in the vector
     if (std::find(uniqueVector.begin(), uniqueVector.end(), element) == uniqueVector.end())
@@ -468,7 +482,7 @@ int Prompt::try_match(void)
     int match_count = 0;
     // It takes less allocations using vector instead of set, with additional
     // handling of uniqueness
-    //std::set<std::string> matches;
+    // std::set<std::string> matches;
     std::vector<std::string> matches;
     matches.reserve(12);
     for (auto &element : m_AuxMenu)
