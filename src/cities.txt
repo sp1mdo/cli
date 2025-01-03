@@ -1,6 +1,52 @@
-asia russia Moscow
-asia russia Petersburg
-asia russia Novosibirsk
+asia india Andhra_Pradesh Visakhapatnam
+asia india Andhra_Pradesh Vijayawada
+asia india Andhra_Pradesh Guntur
+asia india Andhra_Pradesh Nellore
+asia india Andhra_Pradesh Kurnool
+asia india Maharashtra Mumbai
+asia india Maharashtra Pune
+asia india Maharashtra Nagpur
+asia india Maharashtra Nashik
+asia india Maharashtra Thane
+asia india Tamil_Nadu Chennai
+asia india Tamil_Nadu Coimbatore
+asia india Tamil_Nadu Madurai
+asia india Tamil_Nadu Tiruchirappalli
+asia india Tamil_Nadu Salem
+
+asia india Uttar_Pradesh Lucknow
+asia india Uttar_Pradesh Kanpur
+asia india Uttar_Pradesh Ghaziabad
+asia india Uttar_Pradesh Agra
+asia india Uttar_Pradesh Varanasi
+
+asia india West_Bengal Kolkata
+asia india West_Bengal Howrah
+asia india West_Bengal Durgapur
+asia india West_Bengal Asansol
+asia india West_Bengal Siliguri
+
+asia russia Moscow  
+asia russia Saint Petersburg  
+asia russia Novosibirsk  
+asia russia Yekaterinburg  
+asia russia Nizhny Novgorod  
+asia russia Samara  
+asia russia Omsk  
+asia russia Kazan  
+asia russia Rostov-on-Don  
+asia russia Chelyabinsk  
+asia russia Ufa  
+asia russia Volgograd  
+asia russia Perm  
+asia russia Krasnoyarsk  
+asia russia Saratov  
+asia russia Voronezh  
+asia russia Krasnodar  
+asia russia Tolyatti  
+asia russia Izhevsk  
+asia russia Ulyanovsk
+
 africa Algeria Algiers
 africa Algeria Oran
 africa Algeria Constantine
