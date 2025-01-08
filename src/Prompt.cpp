@@ -1,7 +1,11 @@
 #include <cstring>
 #include <sstream>
 #include <vector>
+#include <algorithm>
 #include <set>
+#ifdef UNIX
+#include <unistd.h>
+#endif
 #include "Prompt.hpp"
 #if defined PICO_ON_DEVICE
 #include "pico/time.h"
@@ -43,6 +47,13 @@ void operator delete(void *p)
     free(p);
 }
 
+// Variadic template function to check equality with multiple values
+template <typename T, typename... Args>
+constexpr bool isEqualToAny(T value, Args... args)
+{
+    return ((value == args) || ...); // Fold expression
+}
+
 void Prompt::setNonCanonicalMode(void)
 {
 #ifdef UNIX
@@ -64,62 +75,77 @@ void Prompt::setNonCanonicalMode(void)
 #endif
 }
 
-void Prompt::run(void)
+void Prompt::handleKey(void)
 {
-    updateAuxMenu("");
+    bool special_handling = false;
+    static uint16_t sum = 1;
+    char z = 0;
     print();
-    while (1)
+#ifdef PICO_ON_DEVICE
+    int x = getchar_timeout_us(10000);
+    if (x == PICO_ERROR_TIMEOUT)
+        return;
+#elif defined UNIX
+    int x = getc(stdin);
+#endif
+
+    z = (char)x;
+// printf("\r%02x\n", z); // debug purpose
+// return;
+
+    if ((isEqualToAny(z, 0x08, 0x7f) /* backspace */ && m_Input.empty() == true && m_Prefix.empty() == false)) // esc - todo hadle ESC in handleSpecialCharacters
     {
-        char z = getc(stdin);
+        removeLastWord(m_Prefix);
+        updateAuxMenu(m_Prefix);
+        // m_Prefix.clear();
+        m_Input.clear();
+        clear_line_back(20);
+        print();
+        return;
+    }
+
+    if (z != tab_char) // any valid char, but not tab
+    {
+        if (z == up_key[0] || z == up_key[1])
+            return;
+
+        m_Input.push_back(z);
+        special_handling = handleSpecialCharacters();
+
+        if (special_handling)
         {
-            bool special_handling = false;
-            // printf("\r%02x\n", z); // debug purpose
-            // continue;
-
-            if ((z == backspace_char && m_Input.empty() == true && m_Prefix.empty() == false)) // esc - todo hadle ESC in handleSpecialCharacters
-            {
-                removeLastWord(m_Prefix);
-                updateAuxMenu(m_Prefix);
-                // m_Prefix.clear();
-                m_Input.clear();
-                clear_line(20);
-                print();
-                continue;
-            }
-
-            if (z != tab_char) // any valid char, but not tab
-            {
-                m_Input.push_back(z);
-                special_handling = handleSpecialCharacters();
-                if(special_handling)
-                {
-                    print();
-                    clear_line_fwd(50);
-                    continue;
-                }
-                
-            }
-            size_t num;
-            if (z == backspace_char) // backspace
-            {
-                backspace();
-            }
-            else if (z == tab_char) // tab
-            {
-                num = try_match();
-            }
-
-            if (z != tab_char || num > 0)
-            {
-                print();
-            }
-
-            if (z == newline_char) // newline //10 in Linux
-            {
-                parseCommand();
-                print();
-            }
+            print();
+            clear_line_fwd(50);
+            return;
         }
+    }
+    size_t num = 0;
+    if (isEqualToAny(z, 0x08, 0x7f)) // backspace
+    {
+        backspace();
+    }
+    else if (z == tab_char) // tab
+    {
+        num = try_match();
+    }
+
+    if (z != tab_char || num > 0 || special_handling || (z != up_key[0] && z != up_key[1]))
+    {
+        sum = 0;
+        for (size_t i = 0; i < m_Input.size(); i++)
+        {
+            sum = sum + m_Input[i];
+        }
+        print();
+    }
+
+    if (isEqualToAny(z, 0x0a, 0x0d)) // newline
+    {
+#ifdef PICO_ON_DEVICE
+        printf("\n");
+#endif
+        parseCommand();
+        print();
     }
 }
 
@@ -153,8 +179,9 @@ void Prompt::removeLastWord(std::string &str)
 bool Prompt::handleSpecialCharacters(void)
 {
     // dumpString(m_Input);
-    if (m_Input.find(up_key) != std::string::npos)
+    if (m_Input.find(up_key[2]) != std::string::npos)
     {
+        m_Input.pop_back();
         if (m_CommandHistory.empty() == true)
         {
             m_Input.clear();
@@ -171,11 +198,12 @@ bool Prompt::handleSpecialCharacters(void)
         m_Input = m_CommandHistory[m_HistoryIndex];
 
         // printf("\n");
-        clear_line(50);
+        clear_line_back(50);
         return true;
     }
-    if (m_Input.find(down_key) != std::string::npos)
+    if (m_Input.find(down_key[2]) != std::string::npos)
     {
+        m_Input.pop_back();
         if (m_CommandHistory.empty() == true)
         {
             m_Input.clear();
@@ -212,7 +240,7 @@ bool Prompt::backspace(void) // todo void
         m_Input.pop_back();
     }
 
-    clear_line(20);
+    clear_line_back(20);
 
     return true;
 }
@@ -230,7 +258,7 @@ void Prompt::parseCommand(void)
     for (auto &element : m_AuxMenu)
     {
         // Check whether this string is the full word
-        if (element.first.find(m_Input + " ") == 0)
+        if (element.first.find(m_Input + " ") == 0) // TODO in case this word is also somewhere else this will not work.
         {
             found = true;
         }
@@ -259,7 +287,7 @@ void Prompt::parseCommand(void)
             fprintf(stderr, "\nUnknown command\n");
 
         m_Input.clear();
-        clear_line(20);
+        clear_line_back(20);
         return;
     }
 
@@ -276,7 +304,14 @@ void Prompt::parseCommand(void)
 
             // Execute callabck with given args
             printf("\n");
-            m_AuxMenu.at(command)(args);
+            try
+            {
+                m_AuxMenu.at(command)(args);
+            }
+            catch (const std::invalid_argument &e)
+            {
+                printf("Error: Invalid argument. Input is not a valid number.\n");
+            }
             executed = true;
 
             // Add good command to the command history
@@ -304,7 +339,7 @@ void Prompt::parseCommand(void)
     }
 
     m_Input.clear();
-    clear_line(50);
+    clear_line_back(50);
 }
 
 void Prompt::clear_line_fwd(size_t chars)
@@ -315,7 +350,7 @@ void Prompt::clear_line_fwd(size_t chars)
         printf("\b");
 }
 
-void Prompt::clear_line(size_t chars)
+void Prompt::clear_line_back(size_t chars)
 {
     for (size_t i = 0; i < chars; i++)
         printf("\b");
@@ -330,7 +365,7 @@ std::string Prompt::getFirstNWords(const std::string &input, size_t N)
     std::istringstream stream(input);
     std::string word;
     std::vector<std::string> words;
-
+    words.reserve(7);
     // Extract words from the string stream
     while (stream >> word && words.size() < N)
     {
@@ -521,10 +556,18 @@ int Prompt::try_match(void)
 
 void Prompt::print(void)
 {
+// Color support
+#ifdef UNIX
     if (m_Prefix.empty() == true)
         printf("\r%s[%s][%u]%s > %s", CYAN_COLOR, m_Name.c_str(), alloc_count, DEFAULT_COLOR, m_Input.c_str());
     else
         printf("\r%s[%s][%u] %s/%s%s > %s", CYAN_COLOR, m_Name.c_str(), alloc_count, GREEN_COLOR, m_Prefix.c_str(), DEFAULT_COLOR, m_Input.c_str());
+#else
+    if (m_Prefix.empty() == true)
+        printf("\r[%s] > %s", m_Name.c_str(), m_Input.c_str());
+    else
+        printf("\r[%s] %s / > %s", m_Name.c_str(), m_Prefix.c_str(), m_Input.c_str());
+#endif
 }
 
 // Generate auxiliary menu from given starting point
