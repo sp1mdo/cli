@@ -3,18 +3,30 @@
 #include <vector>
 #include <algorithm>
 #include <set>
-#ifdef UNIX
-#include <unistd.h>
-#endif
 #include "Prompt.hpp"
+
 #if defined PICO_ON_DEVICE
 #include "pico/time.h"
 #include "pico/error.h"
 #include "pico/stdio.h"
 #endif
+
+#if !defined(_WIN32) && (defined(__unix__) || defined(__unix) || (defined(__APPLE__) && defined(__MACH__)))
+#define UNIX
+#elif defined (_WIN32) || defined(_WIN64)
+#define WINDOWS
+#endif
+
+#ifdef UNIX
+#include <termios.h>
+#include <unistd.h>
+#endif
+
 #define GREEN_COLOR "\033[32m"
 #define CYAN_COLOR "\033[36m"
 #define DEFAULT_COLOR "\033[0m"
+
+#define DEBUG 1
 
 const std::string up_key = "\x1b\x5b\x41";
 const std::string down_key = "\x1b\x5b\x42";
@@ -25,7 +37,6 @@ const std::string right_key = "\x1b\x5b\x43";
 const char newline_char = 10;
 const char backspace_char = 0x7f;
 #elif defined PICO_ON_DEVICE
-#warning "this is pico project"
 const char newline_char = 13;
 const char backspace_char = 0x08;
 #endif
@@ -34,7 +45,8 @@ const char tab_char = 0x09;
 uint32_t alloc_count = 0;
 // 536948456 - max memory before dead
 
-void *operator new(size_t size)
+#if DEBUG
+void *operator new(size_t size) noexcept
 {
     // alloc_count++;
     void *p = malloc(size);
@@ -42,10 +54,12 @@ void *operator new(size_t size)
     return p;
 }
 
-void operator delete(void *p)
+void operator delete(void *p) noexcept
 {
     free(p);
 }
+
+#endif
 
 // Variadic template function to check equality with multiple values
 template <typename T, typename... Args>
@@ -87,6 +101,8 @@ void Prompt::handleKey(void)
         return;
 #elif defined UNIX
     int x = getc(stdin);
+#elif defined WINDOWS
+    int x = _getch();
 #endif
 
     z = (char)x;
@@ -185,7 +201,6 @@ bool Prompt::handleSpecialCharacters(void)
         if (m_CommandHistory.empty() == true)
         {
             m_Input.clear();
-            // printf("\n");
             return true;
         }
         m_HistoryIndex++;
@@ -197,7 +212,6 @@ bool Prompt::handleSpecialCharacters(void)
 
         m_Input = m_CommandHistory[m_HistoryIndex];
 
-        // printf("\n");
         clear_line_back(50);
         return true;
     }
@@ -247,7 +261,7 @@ bool Prompt::backspace(void) // todo void
 
 void Prompt::parseCommand(void)
 {
-    while (m_Input.back() == ' ' || m_Input.back() == newline_char) // trim all newline chars and spaces at the end of input str
+    while(isEqualToAny(m_Input.back(),' ', 0x0a, 0x0d)) // trim all newline chars and spaces at the end of input str
         m_Input.pop_back();
 
     size_t cnt = 0;
@@ -258,7 +272,7 @@ void Prompt::parseCommand(void)
     for (auto &element : m_AuxMenu)
     {
         // Check whether this string is the full word
-        if (element.first.find(m_Input + " ") == 0) // TODO in case this word is also somewhere else this will not work.
+        if (element.first.rfind(m_Input + " ") == 0) // TODO in case this word is also somewhere else this will not work.
         {
             found = true;
         }
@@ -365,7 +379,7 @@ std::string Prompt::getFirstNWords(const std::string &input, size_t N)
     std::istringstream stream(input);
     std::string word;
     std::vector<std::string> words;
-    words.reserve(7);
+    words.reserve(7); // Arbitraty number, anything is better than nothing
     // Extract words from the string stream
     while (stream >> word && words.size() < N)
     {
@@ -524,7 +538,6 @@ int Prompt::try_match(void)
     {
         if (element.first.find(m_Input) == 0)
         {
-            // chars_matching = m_Input.size();
             match_count++;
             std::string Nwords = getFirstNWords(element.first, countCharacterOccurrences(m_Input, ' ') + 1) + " ";
             add_unique(matches, std::move(Nwords));
@@ -559,9 +572,9 @@ void Prompt::print(void)
 // Color support
 #ifdef UNIX
     if (m_Prefix.empty() == true)
-        printf("\r%s[%s][%u]%s > %s", CYAN_COLOR, m_Name.c_str(), alloc_count, DEFAULT_COLOR, m_Input.c_str());
+        printf("\r%s[%s]%s > %s", CYAN_COLOR, m_Name.c_str(), DEFAULT_COLOR, m_Input.c_str());
     else
-        printf("\r%s[%s][%u] %s/%s%s > %s", CYAN_COLOR, m_Name.c_str(), alloc_count, GREEN_COLOR, m_Prefix.c_str(), DEFAULT_COLOR, m_Input.c_str());
+        printf("\r%s[%s] %s/%s%s > %s", CYAN_COLOR, m_Name.c_str(), GREEN_COLOR, m_Prefix.c_str(), DEFAULT_COLOR, m_Input.c_str());
 #else
     if (m_Prefix.empty() == true)
         printf("\r[%s] > %s", m_Name.c_str(), m_Input.c_str());

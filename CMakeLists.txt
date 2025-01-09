@@ -15,19 +15,6 @@ add_executable(cli
 
 # Include directories for header files
 target_include_directories(cli PUBLIC "${PROJECT_SOURCE_DIR}/src")
-
-if (WIN32)
-    message(WARNING "Building on Windows.")
-    add_definitions(-DWIN32)
-    # Add Windows-specific settings here
-elseif (UNIX)
-    message(WARNING "Building on Linux/Unix.")
-    add_definitions(-DUNIX)
-    # Add Linux-specific settings here
-else()
-    message(WARNING "Unknown platform.")
-endif()
-
 target_include_directories(${PROJECT_NAME} PRIVATE
     "inc"
 )
