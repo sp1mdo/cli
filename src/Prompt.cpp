@@ -13,7 +13,7 @@
 
 #if !defined(_WIN32) && (defined(__unix__) || defined(__unix) || (defined(__APPLE__) && defined(__MACH__)))
 #define UNIX
-#elif defined (_WIN32) || defined(_WIN64)
+#elif defined(_WIN32) || defined(_WIN64)
 #define WINDOWS
 #endif
 
@@ -26,7 +26,7 @@
 #define CYAN_COLOR "\033[36m"
 #define DEFAULT_COLOR "\033[0m"
 
-#define DEBUG 1
+#define DEBUG 0
 
 const std::string up_key = "\x1b\x5b\x41";
 const std::string down_key = "\x1b\x5b\x42";
@@ -60,6 +60,16 @@ void operator delete(void *p) noexcept
 }
 
 #endif
+
+void dumpString(const std::string &str)
+{
+    printf("\n[");
+    for (auto &xchar : str)
+    {
+        printf("%02x ", xchar);
+    }
+    printf("]\n");
+}
 
 // Variadic template function to check equality with multiple values
 template <typename T, typename... Args>
@@ -96,7 +106,7 @@ void Prompt::handleKey(void)
     char z = 0;
     print();
 #ifdef PICO_ON_DEVICE
-    int x = getchar_timeout_us(10000);
+    int x = getchar_timeout_us(10);
     if (x == PICO_ERROR_TIMEOUT)
         return;
 #elif defined UNIX
@@ -106,9 +116,24 @@ void Prompt::handleKey(void)
 #endif
 
     z = (char)x;
-// printf("\r%02x\n", z); // debug purpose
-// return;
+     //printf("\r%02x\n", z); // debug purpose
+     //return;
 
+    if(z == 0x1b && special_state == false)
+    {        
+        special_state = true;
+        m_Input.push_back(z);
+        return;
+    }
+
+    if(z == 0x1b && special_state == true) // recovery from being stuck in special_state
+    {        
+        special_state = false;
+        m_Input.clear();
+        clear_line_back(20);
+        return;
+    }
+    
     if ((isEqualToAny(z, 0x08, 0x7f) /* backspace */ && m_Input.empty() == true && m_Prefix.empty() == false)) // esc - todo hadle ESC in handleSpecialCharacters
     {
         removeLastWord(m_Prefix);
@@ -122,14 +147,15 @@ void Prompt::handleKey(void)
 
     if (z != tab_char) // any valid char, but not tab
     {
-        if (z == up_key[0] || z == up_key[1])
-            return;
+        // if (z == up_key[0] || z == up_key[1])
+        //     return;
 
         m_Input.push_back(z);
         special_handling = handleSpecialCharacters();
 
         if (special_handling)
         {
+            special_state = false;
             print();
             clear_line_fwd(50);
             return;
@@ -170,15 +196,7 @@ void Prompt::debug(void)
     printf("\n[%s] \n", m_Input.c_str());
 }
 
-void dumpString(const std::string &str)
-{
-    printf("\n[");
-    for (auto &xchar : str)
-    {
-        printf("%02x ", xchar);
-    }
-    printf("]\n");
-}
+
 
 void Prompt::removeLastWord(std::string &str)
 {
@@ -194,10 +212,10 @@ void Prompt::removeLastWord(std::string &str)
 
 bool Prompt::handleSpecialCharacters(void)
 {
-    // dumpString(m_Input);
-    if (m_Input.find(up_key[2]) != std::string::npos)
+    // Handle key_up for scrolling the command history
+    if (m_Input.find(m_FunctionKeys[static_cast<int>(FnKey::UP)]) != std::string::npos)
     {
-        m_Input.pop_back();
+        m_Input.clear();
         if (m_CommandHistory.empty() == true)
         {
             m_Input.clear();
@@ -215,9 +233,11 @@ bool Prompt::handleSpecialCharacters(void)
         clear_line_back(50);
         return true;
     }
-    if (m_Input.find(down_key[2]) != std::string::npos)
+
+    // Handle key_down for scrolling the command history
+    if (m_Input.find(m_FunctionKeys[static_cast<int>(FnKey::DOWN)]) != std::string::npos)
     {
-        m_Input.pop_back();
+        m_Input.clear();
         if (m_CommandHistory.empty() == true)
         {
             m_Input.clear();
@@ -238,6 +258,23 @@ bool Prompt::handleSpecialCharacters(void)
         return true;
     }
 
+    // Handle keys F1-F12
+    for (size_t i = 0; i < m_FunctionKeys.size(); i++)
+    {
+        if (m_Input.find(m_FunctionKeys[i]) != std::string::npos)
+        {
+            //dumpString(m_Input);
+            printf("\n "); // this avoids  moving the cursor up
+
+            m_Input.clear();
+
+            if (m_FnKeyCallback[i])
+                m_FnKeyCallback[i]();
+            else
+                printf("\nF%zu has no function attached to it.\n",i+1);
+            return true;
+        }
+    }
     return false;
 }
 
@@ -261,7 +298,7 @@ bool Prompt::backspace(void) // todo void
 
 void Prompt::parseCommand(void)
 {
-    while(isEqualToAny(m_Input.back(),' ', 0x0a, 0x0d)) // trim all newline chars and spaces at the end of input str
+    while (isEqualToAny(m_Input.back(), ' ', 0x0a, 0x0d)) // trim all newline chars and spaces at the end of input str
         m_Input.pop_back();
 
     size_t cnt = 0;
@@ -567,8 +604,10 @@ int Prompt::try_match(void)
     return match_count;
 }
 
-void Prompt::print(void)
+void Prompt::print(void) noexcept
 {
+    if(special_state == true)
+        return;
 // Color support
 #ifdef UNIX
     if (m_Prefix.empty() == true)
@@ -581,6 +620,14 @@ void Prompt::print(void)
     else
         printf("\r[%s] %s / > %s", m_Name.c_str(), m_Prefix.c_str(), m_Input.c_str());
 #endif
+}
+
+void Prompt::attachFnKeyCallback(FnKey key, const std::function<void()> &cb)
+{
+    if (static_cast<size_t>(key) < m_FnKeyCallback.size())
+        m_FnKeyCallback[static_cast<int>(key)] = cb;
+    else
+        throw std::out_of_range("Invalid index for FnKey");
 }
 
 // Generate auxiliary menu from given starting point

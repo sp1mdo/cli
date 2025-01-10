@@ -16,9 +16,19 @@ void callback(int id, const std::string &str)
     std::cout << "Received : id=" << id << " arg=[" << str << "]" << std::endl;
 }
 
+void special_function(int key)
+{
+    std::cout << "Pressed F" << key+1 << std::endl;
+}
+
 int main(int argc, char **argv)
 {
     Prompt my_prompt("WORLD");
+
+    for(int i = static_cast<int>(FnKey::F1) ; i < static_cast<int>(FnKey::F12)+1 ; i++)
+    {
+        my_prompt.attachFnKeyCallback(static_cast<FnKey>(i), std::bind(special_function, i));
+    }
 
     std::ifstream file(argv[1]);
 

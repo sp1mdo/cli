@@ -15,13 +15,62 @@ using Tokens = std::vector<std::string>;
 using Callback = std::function<void(const std::string &)>;
 using MenuEntity = std::pair<std::string, Callback>;
 
+enum class FnKey
+{
+    F1 = 0,
+    F2,
+    F3,
+    F4,
+    F5,
+    F6,
+    F7,
+    F8,
+    F9,
+    F10,
+    F11,
+    F12,
+    UP,
+    DOWN,
+    LEFT,
+    RIGHT,
+    LAST_ITEM,
+};
+
 class Prompt
 {
 public:
-    Prompt(const std::string &name) : m_Name(name), m_HistoryIndex(-1), m_SpecialCharsHandling(true)
+    Prompt(const std::string &name) : special_state(false), m_Name(name), m_HistoryIndex(-1), m_SpecialCharsHandling(true)
     {
         setNonCanonicalMode();
         updateAuxMenu("");
+        m_FunctionKeys[static_cast<int>(FnKey::F1)] = "\x1b\x4f\x50";
+        m_FunctionKeys[static_cast<int>(FnKey::F2)] = "\x1b\x4f\x51";
+        m_FunctionKeys[static_cast<int>(FnKey::F3)] = "\x1b\x4f\x52";
+        m_FunctionKeys[static_cast<int>(FnKey::F4)] = "\x1b\x4f\x53";
+
+#if PICO_ON_DEVICE
+        m_FunctionKeys[static_cast<int>(FnKey::F5)] = "\x1b\x5b\x31\x36\x7e";
+#else
+        m_FunctionKeys[static_cast<int>(FnKey::F5)] = "\x1b\x5b\x31\x35\x7e";
+#endif
+        m_FunctionKeys[static_cast<int>(FnKey::F6)] = "\x1b\x5b\x31\x37\x7e";
+        m_FunctionKeys[static_cast<int>(FnKey::F7)] = "\x1b\x5b\x31\x38\x7e";
+        m_FunctionKeys[static_cast<int>(FnKey::F8)] = "\x1b\x5b\x31\x39\x7e";
+
+        m_FunctionKeys[static_cast<int>(FnKey::F9)] = "\x1b\x5b\x32\x30\x7e";
+        m_FunctionKeys[static_cast<int>(FnKey::F10)] = "\x1b\x5b\x32\x31\x7e";
+        m_FunctionKeys[static_cast<int>(FnKey::F11)] = "\x1b\x5b\x32\x33\x7e";
+        m_FunctionKeys[static_cast<int>(FnKey::F12)] = "\x1b\x5b\x32\x34\x7e";
+
+        m_FunctionKeys[static_cast<int>(FnKey::UP)] = "\x1b\x5b\x41";
+        m_FunctionKeys[static_cast<int>(FnKey::DOWN)] = "\x1b\x5b\x42";
+        m_FunctionKeys[static_cast<int>(FnKey::LEFT)] = "\x1b\x5b\x44";
+        m_FunctionKeys[static_cast<int>(FnKey::RIGHT)] = "\x1b\x5b\x43";
+
+        for (auto &element : m_FnKeyCallback)
+        {
+            element = nullptr;
+        }
     };
 
     void spin_loop(void)
@@ -35,7 +84,7 @@ public:
     void handleKey(void);
     void push_back(char c);
     bool backspace(void);
-    void print(void);
+    void print(void) noexcept;
     int try_match(void);
     void parseCommand(void);
     void insertMapElement(std::string &&str, Callback cb);
@@ -47,10 +96,15 @@ public:
     std::map<std::string, Callback> m_MainMenu;
     std::map<std::string, Callback> m_AuxMenu;
 
+    void attachFnKeyCallback(FnKey key, const std::function<void()> &cb);
+
     // Flat_Map<std::string, Callback> m_MainMenu;
     // Flat_Map<std::string, Callback> m_AuxMenu;
+    std::array<std::function<void()>, static_cast<int>(FnKey::F12) + 1> m_FnKeyCallback;
+    std::array<std::string, static_cast<int>(FnKey::LAST_ITEM)> m_FunctionKeys;
 
 private:
+    bool special_state;
     std::string m_Input;
     std::string m_Prefix;
     std::string m_Name;
