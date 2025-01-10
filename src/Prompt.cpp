@@ -22,6 +22,10 @@
 #include <unistd.h>
 #endif
 
+#ifdef WINDOWS
+#include <conio.h> // For _getch()
+#endif
+
 #define GREEN_COLOR "\033[32m"
 #define CYAN_COLOR "\033[36m"
 #define DEFAULT_COLOR "\033[0m"
