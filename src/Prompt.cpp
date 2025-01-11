@@ -120,25 +120,30 @@ void Prompt::handleKey(void)
 #endif
 
     z = (char)x;
-     //printf("\r%02x\n", z); // debug purpose
-     //return;
+    // printf("\r%02x\n", z); // debug purpose
+    // return;
 
-    if(z == 0x1b && special_state == false)
-    {        
+    if (z == 0x1b && special_state == false)
+    {
         special_state = true;
         m_Input.push_back(z);
         return;
     }
 
-    if(z == 0x1b && special_state == true) // recovery from being stuck in special_state
-    {        
+    if (z == 0x1b && special_state == true) // recovery from being stuck in special_state
+    {
         special_state = false;
         m_Input.clear();
         clear_line_back(20);
         return;
     }
-    
-    if ((isEqualToAny(z, 0x08, 0x7f) /* backspace */ && m_Input.empty() == true && m_Prefix.empty() == false)) // esc - todo hadle ESC in handleSpecialCharacters
+
+    if ((isEqualToAny(z, 0x08, 0x7f) /* backspace */ && m_Input.empty() == true && m_Prefix.empty() == true))
+    {
+        return;
+    }
+
+    if ((isEqualToAny(z, 0x08, 0x7f) /* backspace */ && m_Input.empty() == true && m_Prefix.empty() == false))
     {
         removeLastWord(m_Prefix);
         updateAuxMenu(m_Prefix);
@@ -175,7 +180,7 @@ void Prompt::handleKey(void)
         num = try_match();
     }
 
-    if (z != tab_char || num > 0 || special_handling || (z != up_key[0] && z != up_key[1]))
+    if (z != tab_char || num > 0 || special_handling)
     {
         sum = 0;
         for (size_t i = 0; i < m_Input.size(); i++)
@@ -200,8 +205,6 @@ void Prompt::debug(void)
     printf("\n[%s] \n", m_Input.c_str());
 }
 
-
-
 void Prompt::removeLastWord(std::string &str)
 {
     while (str.empty() == false)
@@ -214,11 +217,18 @@ void Prompt::removeLastWord(std::string &str)
     str.pop_back();
 }
 
+template<typename... Args>
+bool containsAny(const std::string& str, const Args&... substrs) {
+    return ((str.find(substrs) != std::string::npos) || ...);
+}
+
 bool Prompt::handleSpecialCharacters(void)
 {
     // Handle key_up for scrolling the command history
-    if (m_Input.find(m_FunctionKeys[static_cast<int>(FnKey::UP)]) != std::string::npos)
+    //if (m_Input.find(m_FunctionKeys[static_cast<int>(FnKey::UP)]) != std::string::npos || m_Input.find("\x1b\x4f\x41") != std::string::npos)
+    if(containsAny(m_Input,"\x1b\x5b\x41","\x1b\x4f\x41" ))
     {
+        if(m_Input.find("\x1b\x4f\x41") != std::string::npos) printf("\n");
         m_Input.clear();
         if (m_CommandHistory.empty() == true)
         {
@@ -239,7 +249,7 @@ bool Prompt::handleSpecialCharacters(void)
     }
 
     // Handle key_down for scrolling the command history
-    if (m_Input.find(m_FunctionKeys[static_cast<int>(FnKey::DOWN)]) != std::string::npos)
+    if(containsAny(m_Input,"\x1b\x5b\x42","\x1b\x4f\x42" ))
     {
         m_Input.clear();
         if (m_CommandHistory.empty() == true)
@@ -262,12 +272,19 @@ bool Prompt::handleSpecialCharacters(void)
         return true;
     }
 
+    // Left and Right arrows, just do nothing and prevent from messing the console
+    if(containsAny(m_Input,"\x1b\x5b\x43","\x1b\x4f\x43","\x1b\x5b\x44","\x1b\x4f\x44" ))
+    {
+        m_Input.clear();
+        return true;
+    }
+
     // Handle keys F1-F12
     for (size_t i = 0; i < m_FunctionKeys.size(); i++)
     {
         if (m_Input.find(m_FunctionKeys[i]) != std::string::npos)
         {
-            //dumpString(m_Input);
+            // dumpString(m_Input);
             printf("\n "); // this avoids  moving the cursor up
 
             m_Input.clear();
@@ -275,7 +292,7 @@ bool Prompt::handleSpecialCharacters(void)
             if (m_FnKeyCallback[i])
                 m_FnKeyCallback[i]();
             else
-                printf("\nF%zu has no function attached to it.\n",i+1);
+                printf("\nF%zu has no function attached to it.\n", i + 1);
             return true;
         }
     }
@@ -367,6 +384,7 @@ void Prompt::parseCommand(void)
             {
                 printf("Error: Invalid argument. Input is not a valid number.\n");
             }
+            printf("\n");
             executed = true;
 
             // Add good command to the command history
@@ -610,7 +628,7 @@ int Prompt::try_match(void)
 
 void Prompt::print(void) noexcept
 {
-    if(special_state == true)
+    if (special_state == true)
         return;
 // Color support
 #ifdef UNIX

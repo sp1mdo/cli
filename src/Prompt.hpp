@@ -29,10 +29,10 @@ enum class FnKey
     F10,
     F11,
     F12,
-    UP,
-    DOWN,
-    LEFT,
-    RIGHT,
+    UP,    // causing unclear behaviour if removed
+    DOWN,  // causing unclear behaviour if removed
+    LEFT,  // causing unclear behaviour if removed
+    RIGHT, // causing unclear behaviour if removed
     LAST_ITEM,
 };
 
@@ -62,10 +62,10 @@ public:
         m_FunctionKeys[static_cast<int>(FnKey::F11)] = "\x1b\x5b\x32\x33\x7e";
         m_FunctionKeys[static_cast<int>(FnKey::F12)] = "\x1b\x5b\x32\x34\x7e";
 
-        m_FunctionKeys[static_cast<int>(FnKey::UP)] = "\x1b\x5b\x41";
-        m_FunctionKeys[static_cast<int>(FnKey::DOWN)] = "\x1b\x5b\x42";
-        m_FunctionKeys[static_cast<int>(FnKey::LEFT)] = "\x1b\x5b\x44";
-        m_FunctionKeys[static_cast<int>(FnKey::RIGHT)] = "\x1b\x5b\x43";
+        //m_FunctionKeys[static_cast<int>(FnKey::UP)] = "\x1b\x5b\x41";
+        //m_FunctionKeys[static_cast<int>(FnKey::DOWN)] = "\x1b\x5b\x42";
+        //m_FunctionKeys[static_cast<int>(FnKey::LEFT)] = "\x1b\x5b\x44";
+        //m_FunctionKeys[static_cast<int>(FnKey::RIGHT)] = "\x1b\x5b\x43";
 
         for (auto &element : m_FnKeyCallback)
         {
