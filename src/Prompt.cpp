@@ -121,7 +121,7 @@ void Prompt::handleKey(void)
 
     z = (char)x;
     // printf("\r%02x\n", z); // debug purpose
-    // return;
+    //  return;
 
     if (z == 0x1b && special_state == false)
     {
@@ -217,18 +217,20 @@ void Prompt::removeLastWord(std::string &str)
     str.pop_back();
 }
 
-template<typename... Args>
-bool containsAny(const std::string& str, const Args&... substrs) {
+template <typename... Args>
+bool containsAny(const std::string &str, const Args &...substrs)
+{
     return ((str.find(substrs) != std::string::npos) || ...);
 }
 
 bool Prompt::handleSpecialCharacters(void)
 {
     // Handle key_up for scrolling the command history
-    //if (m_Input.find(m_FunctionKeys[static_cast<int>(FnKey::UP)]) != std::string::npos || m_Input.find("\x1b\x4f\x41") != std::string::npos)
-    if(containsAny(m_Input,"\x1b\x5b\x41","\x1b\x4f\x41" ))
+    // if (m_Input.find(m_FunctionKeys[static_cast<int>(FnKey::UP)]) != std::string::npos || m_Input.find("\x1b\x4f\x41") != std::string::npos)
+    if (containsAny(m_Input, "\x1b\x5b\x41", "\x1b\x4f\x41"))
     {
-        if(m_Input.find("\x1b\x4f\x41") != std::string::npos) printf("\n");
+        if (m_Input.find("\x1b\x4f\x41") != std::string::npos)
+            printf("\n");
         m_Input.clear();
         if (m_CommandHistory.empty() == true)
         {
@@ -249,7 +251,7 @@ bool Prompt::handleSpecialCharacters(void)
     }
 
     // Handle key_down for scrolling the command history
-    if(containsAny(m_Input,"\x1b\x5b\x42","\x1b\x4f\x42" ))
+    if (containsAny(m_Input, "\x1b\x5b\x42", "\x1b\x4f\x42"))
     {
         m_Input.clear();
         if (m_CommandHistory.empty() == true)
@@ -273,14 +275,13 @@ bool Prompt::handleSpecialCharacters(void)
     }
 
     // Left and Right arrows, just do nothing and prevent from messing the console
-    if(containsAny(m_Input,"\x1b\x5b\x43","\x1b\x4f\x43","\x1b\x5b\x44","\x1b\x4f\x44" ))
+    if (containsAny(m_Input, "\x1b\x5b\x43", "\x1b\x4f\x43", "\x1b\x5b\x44", "\x1b\x4f\x44"))
     {
         m_Input.clear();
         return true;
     }
-
     // Handle keys F1-F12
-    for (size_t i = 0; i < m_FunctionKeys.size(); i++)
+    for (size_t i = 0; i < static_cast<size_t>(FnKey::F12); i++)
     {
         if (m_Input.find(m_FunctionKeys[i]) != std::string::npos)
         {
