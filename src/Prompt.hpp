@@ -39,7 +39,7 @@ enum class FnKey
 class Prompt
 {
 public:
-    Prompt(const std::string &name) : special_state(false), m_Name(name), m_HistoryIndex(-1), m_SpecialCharsHandling(true)
+    Prompt(const std::string &name) :  special_state(false), m_Name(name), m_HistoryIndex(-1), m_SpecialCharsHandling(true), m_oldInput("dummy")
     {
         setNonCanonicalMode();
         updateAuxMenu("");
@@ -62,11 +62,6 @@ public:
         m_FunctionKeys[static_cast<int>(FnKey::F11)] = "\x1b\x5b\x32\x33\x7e";
         m_FunctionKeys[static_cast<int>(FnKey::F12)] = "\x1b\x5b\x32\x34\x7e";
 
-        //m_FunctionKeys[static_cast<int>(FnKey::UP)] = "\x1b\x5b\x41";
-        //m_FunctionKeys[static_cast<int>(FnKey::DOWN)] = "\x1b\x5b\x42";
-        //m_FunctionKeys[static_cast<int>(FnKey::LEFT)] = "\x1b\x5b\x44";
-        //m_FunctionKeys[static_cast<int>(FnKey::RIGHT)] = "\x1b\x5b\x43";
-
         for (auto &element : m_FnKeyCallback)
         {
             element = nullptr;
@@ -76,6 +71,7 @@ public:
     void spin_loop(void)
     {
         updateAuxMenu("");
+        print();
         while (1)
         {
             handleKey();
@@ -94,12 +90,10 @@ public:
     bool isSpecialCharsHandlingEnabled(void);
 
     std::map<std::string, Callback> m_MainMenu;
-    std::map<std::string, Callback> m_AuxMenu;
+    std::map<std::string_view, Callback> m_AuxMenu;
 
     void attachFnKeyCallback(FnKey key, const std::function<void()> &cb);
 
-    // Flat_Map<std::string, Callback> m_MainMenu;
-    // Flat_Map<std::string, Callback> m_AuxMenu;
     std::array<std::function<void()>, static_cast<int>(FnKey::F12) + 1> m_FnKeyCallback;
     std::array<std::string, static_cast<int>(FnKey::LAST_ITEM)> m_FunctionKeys;
 
@@ -111,12 +105,13 @@ private:
     Tokens m_CommandHistory;
     int m_HistoryIndex;
     bool m_SpecialCharsHandling;
+    std::string m_oldInput;
+
     bool handleSpecialCharacters(void);
     void removeLastWord(std::string &str);
-    size_t countCommonPrefixLength(const std::vector<std::string> &stringSet);
-    size_t countCommonPrefixLength(const std::set<std::string> &stringSet);
+    size_t countCommonPrefixLength(const std::vector<std::string_view> &stringSet);
     size_t countCharacterOccurrences(const std::string &input, char target);
-    std::string getLastWord(const std::string &input);
+    std::string_view getLastWord(const std::string_view &input);
     void clear_line_back(size_t chars);
     void clear_line_fwd(size_t chars);
     void debug(void);

@@ -2,6 +2,7 @@
 #include <sstream>
 #include <vector>
 #include <algorithm>
+#include <iostream>
 #include <set>
 #include "Prompt.hpp"
 
@@ -145,9 +146,9 @@ void Prompt::handleKey(void)
 
     if ((isEqualToAny(z, 0x08, 0x7f) /* backspace */ && m_Input.empty() == true && m_Prefix.empty() == false))
     {
+        m_oldInput = m_Input + "\x05";
         removeLastWord(m_Prefix);
         updateAuxMenu(m_Prefix);
-        // m_Prefix.clear();
         m_Input.clear();
         clear_line_back(20);
         print();
@@ -178,6 +179,7 @@ void Prompt::handleKey(void)
     else if (z == tab_char) // tab
     {
         num = try_match();
+        m_oldInput = m_Input + "\x05"; // add dummy char to force printin the prompt
     }
 
     if (z != tab_char || num > 0 || special_handling)
@@ -214,7 +216,9 @@ void Prompt::removeLastWord(std::string &str)
 
         str.pop_back();
     }
-    str.pop_back();
+
+    if (str.size() > 0)
+        str.pop_back();
 }
 
 template <typename... Args>
@@ -226,9 +230,10 @@ bool containsAny(const std::string &str, const Args &...substrs)
 bool Prompt::handleSpecialCharacters(void)
 {
     // Handle key_up for scrolling the command history
-    // if (m_Input.find(m_FunctionKeys[static_cast<int>(FnKey::UP)]) != std::string::npos || m_Input.find("\x1b\x4f\x41") != std::string::npos)
     if (containsAny(m_Input, "\x1b\x5b\x41", "\x1b\x4f\x41"))
     {
+        // Add dummy char to force print the prompt
+        m_oldInput = m_Input + "\x05";
         if (m_Input.find("\x1b\x4f\x41") != std::string::npos)
             printf("\n");
         m_Input.clear();
@@ -253,6 +258,8 @@ bool Prompt::handleSpecialCharacters(void)
     // Handle key_down for scrolling the command history
     if (containsAny(m_Input, "\x1b\x5b\x42", "\x1b\x4f\x42"))
     {
+        // Add dummy char to force print the prompt
+        m_oldInput = m_Input + "\x05";
         m_Input.clear();
         if (m_CommandHistory.empty() == true)
         {
@@ -280,20 +287,80 @@ bool Prompt::handleSpecialCharacters(void)
         m_Input.clear();
         return true;
     }
-    // Handle keys F1-F12
-    for (size_t i = 0; i < static_cast<size_t>(FnKey::F12); i++)
+
+    ssize_t index = -1;
+    // Handle key F1
+    if (containsAny(m_Input, "\x1b\x4f\x50", "\x1b\x5b\x31\x31\x7e")) // done
     {
-        if (m_Input.find(m_FunctionKeys[i]) != std::string::npos)
+        index = 0;
+    }
+    // Handle key F2
+    else if (containsAny(m_Input, "\x1b\x4f\x51", "\x1b\x5b\x31\x32\x7e"))
+    {
+        index = 1;
+    }
+    // Handle key F3
+    else if (containsAny(m_Input, "\x1b\x4f\x52", "\x1b\x5b\x31\x33\x7e"))
+    {
+        index = 2;
+    }
+    // Handle key F4
+    else if (containsAny(m_Input, "\x1b\x4f\x53", "\x1b\x5b\x31\x34\x7e"))
+    {
+        index = 3;
+    }
+    // Handle key F5
+    else if (containsAny(m_Input, "\x1b\x5b\x31\x36\x7e", "\x1b\x5b\x31\x35\x7e", "\x1b\x4f\x54"))
+    {
+        index = 4;
+    }
+    // Handle key F6
+    else if (containsAny(m_Input, "\x1b\x5b\x31\x37\x7e", "\x1b\x4f\x55"))
+    {
+        index = 5;
+    }
+    // Handle key F7
+    else if (containsAny(m_Input, "\x1b\x5b\x31\x38\x7e", "\x1b\x4f\x56"))
+    {
+        index = 6;
+    }
+    // Handle key F8
+    else if (containsAny(m_Input, "\x1b\x5b\x31\x39\x7e", "\x1b\x4f\x57"))
+    {
+        index = 7;
+    }
+    // Handle key F9
+    else if (containsAny(m_Input, "\x1b\x5b\x32\x30\x7e", "\x1b\x4f\x58"))
+    {
+        index = 8;
+    }
+    // Handle key F10
+    else if (containsAny(m_Input, "\x1b\x5b\x32\x31\x7e", "\x1b\x4f\x59"))
+    {
+        index = 9;
+    }
+    // Handle key F11
+    else if (containsAny(m_Input, "\x1b\x5b\x32\x33\x7e", "\x1b\x4f\x5a"))
+    {
+        index = 10;
+    }
+    // Handle key F12
+    else if (containsAny(m_Input, "\x1b\x5b\x32\x34\x7e", "\x1b\x4f\x5b"))
+    {
+        index = 11;
+    }
+
+    if (index != -1)
+    {
+        printf("\n "); // this avoids  moving the cursor up
+        m_oldInput = m_Input + "\x05";
+        m_Input.clear();
+        //try
         {
-            // dumpString(m_Input);
-            printf("\n "); // this avoids  moving the cursor up
-
-            m_Input.clear();
-
-            if (m_FnKeyCallback[i])
-                m_FnKeyCallback[i]();
+            if (m_FnKeyCallback[index])
+                m_FnKeyCallback[index]();
             else
-                printf("\nF%zu has no function attached to it.\n", i + 1);
+                printf("\nF%zu has no function attached to it.\n", index + 1);
             return true;
         }
     }
@@ -463,28 +530,31 @@ size_t Prompt::countCharacterOccurrences(const std::string &input, char target)
     return std::count(input.begin(), input.end(), target);
 }
 
-std::string Prompt::getLastWord(const std::string &input)
+std::string_view Prompt::getLastWord(const std::string_view &input)
 {
-    // Trim trailing whitespace (if any)
-    auto end = std::find_if(input.rbegin(), input.rend(), [](char c)
-                            { return !std::isspace(static_cast<unsigned char>(c)); })
-                   .base();
+    std::string_view trimmed = input;
 
-    if (end == input.begin())
+    // Trim trailing spaces from the input
+    while (!trimmed.empty() && std::isspace(trimmed.back()))
     {
-        return ""; // Return empty string if input is all whitespace
+        trimmed.remove_suffix(1);
     }
 
-    // Find the beginning of the last word
-    auto start = std::find_if(std::string::const_reverse_iterator(end), input.rend(), [](char c)
-                              { return std::isspace(static_cast<unsigned char>(c)); })
-                     .base();
+    // Find the position of the last space
+    size_t last_space = trimmed.find_last_of(' ');
 
-    return std::string(start, end);
+    // Return the substring after the last space
+    if (last_space == std::string_view::npos)
+    {
+        return trimmed; // No spaces found, return the whole trimmed string
+    }
+    else
+    {
+        return trimmed.substr(last_space + 1);
+    }
 }
 
-// Function to determine the number of identical first characters shared by all strings in the set
-size_t Prompt::countCommonPrefixLength(const std::set<std::string> &stringSet)
+size_t Prompt::countCommonPrefixLength(const std::vector<std::string_view> &stringSet)
 {
     if (stringSet.empty())
     {
@@ -492,50 +562,7 @@ size_t Prompt::countCommonPrefixLength(const std::set<std::string> &stringSet)
     }
 
     // Take the first string as a reference to compare others
-    const std::string &firstString = *stringSet.begin();
-
-    // Initialize the common prefix length to the length of the first string
-    size_t commonLength = firstString.length();
-
-    // Iterate through the set to compare each string
-    for (const auto &str : stringSet)
-    {
-        // Find the common prefix length between the current string and the reference
-        size_t currentCommonLength = 0;
-        for (size_t i = 0; i < std::min(commonLength, str.length()); ++i)
-        {
-            if (firstString[i] == str[i])
-            {
-                ++currentCommonLength;
-            }
-            else
-            {
-                break;
-            }
-        }
-
-        // Update the common length
-        commonLength = currentCommonLength;
-
-        // Early exit if no common prefix remains
-        if (commonLength == 0)
-        {
-            break;
-        }
-    }
-
-    return commonLength;
-}
-
-size_t Prompt::countCommonPrefixLength(const std::vector<std::string> &stringSet)
-{
-    if (stringSet.empty())
-    {
-        return 0; // No strings, no common prefix
-    }
-
-    // Take the first string as a reference to compare others
-    const std::string &firstString = *stringSet.begin();
+    const std::string_view &firstString = *stringSet.begin();
 
     // Initialize the common prefix length to the length of the first string
     size_t commonLength = firstString.length();
@@ -571,36 +598,45 @@ size_t Prompt::countCommonPrefixLength(const std::vector<std::string> &stringSet
 }
 
 template <typename T>
-void add_unique(std::vector<T> &uniqueVector, T &&element)
+void add_unique(std::vector<T> &uniqueVector, T &element)
 {
     // Check if the value already exists in the vector
     if (std::find(uniqueVector.begin(), uniqueVector.end(), element) == uniqueVector.end())
     {
-        uniqueVector.emplace_back(std::move(element));
+        uniqueVector.emplace_back((element));
     }
 }
 
-template <typename T>
-void add_unique(std::set<T> &uniqueSet, T &&element)
+std::string_view getnwords(const std::string &substr, const std::string_view &str)
 {
-    uniqueSet.emplace(std::move(element));
+    size_t index;
+    for (index = substr.size(); index <= str.size(); index++)
+    {
+        if (str[index] == ' ')
+        {
+                break;
+        }
+    }
+
+    if(index+1 > str.size())
+        index--;
+
+    std::string_view newstr(str.data(), index+1);
+    return newstr;
 }
 
 int Prompt::try_match(void)
 {
     int match_count = 0;
-    // It takes less allocations using vector instead of set, with additional
-    // handling of uniqueness
-    // std::set<std::string> matches;
-    std::vector<std::string> matches;
+    std::vector<std::string_view> matches;
     matches.reserve(12);
     for (auto &element : m_AuxMenu)
     {
         if (element.first.find(m_Input) == 0)
         {
             match_count++;
-            std::string Nwords = getFirstNWords(element.first, countCharacterOccurrences(m_Input, ' ') + 1) + " ";
-            add_unique(matches, std::move(Nwords));
+            std::string_view Nwords = getnwords(m_Input, element.first);
+            add_unique(matches, Nwords);
         }
     }
     if (match_count)
@@ -608,15 +644,18 @@ int Prompt::try_match(void)
 
     for (auto &element : matches)
     {
-        printf("\t%s \n", getLastWord(element).c_str());
+        std::cout << "\t" << getLastWord((element)) << std::endl;
     }
 
     if (matches.size() == 1)
     {
-        m_Input = *(matches.begin());
+        std::string_view &sv = *(matches.begin());
+        m_Input = std::string(sv.substr(0, sv.size() - 1)); // skip passing \n to m_Input otherwise everything after will not be printed
+
+        if(m_Input.back() != ' ') m_Input = m_Input + " ";
         return match_count;
     }
-    const std::string &refStr = *(matches.begin());
+    const std::string_view &refStr = *(matches.begin());
 
     // Determine if next chars are all the same so we could complete them
     auto num = countCommonPrefixLength(matches);
@@ -629,9 +668,25 @@ int Prompt::try_match(void)
 
 void Prompt::print(void) noexcept
 {
-    if (special_state == true)
+    // Print only when content is changed, otherwise skip.
+    // Skip printing while entering special chars like \x1b
+    if (special_state == true || m_oldInput == m_Input)
         return;
-// Color support
+
+
+#if DEBUG
+#ifdef UNIX
+    if (m_Prefix.empty() == true)
+        printf("\r%s[%s][%u]%s > %s", CYAN_COLOR, m_Name.c_str(),alloc_count, DEFAULT_COLOR, m_Input.c_str());
+    else
+        printf("\r%s[%s][%u] %s/%s%s > %s", CYAN_COLOR, m_Name.c_str(),alloc_count, GREEN_COLOR, m_Prefix.c_str(), DEFAULT_COLOR, m_Input.c_str());
+#else
+    if (m_Prefix.empty() == true)
+        printf("\r[%s][%u] > %s", m_Name.c_str(),alloc_count, m_Input.c_str());
+    else
+        printf("\r[%s][%u] %s / > %s", m_Name.c_str(),alloc_count,  m_Prefix.c_str(), m_Input.c_str());
+#endif
+#else
 #ifdef UNIX
     if (m_Prefix.empty() == true)
         printf("\r%s[%s]%s > %s", CYAN_COLOR, m_Name.c_str(), DEFAULT_COLOR, m_Input.c_str());
@@ -643,6 +698,10 @@ void Prompt::print(void) noexcept
     else
         printf("\r[%s] %s / > %s", m_Name.c_str(), m_Prefix.c_str(), m_Input.c_str());
 #endif
+#endif
+
+    // Store previous content
+    m_oldInput = m_Input;
 }
 
 void Prompt::attachFnKeyCallback(FnKey key, const std::function<void()> &cb)
@@ -659,13 +718,23 @@ void Prompt::updateAuxMenu(const std::string &prefix)
     m_AuxMenu.clear();
     m_CommandHistory.clear();
     m_HistoryIndex = -1;
+
+    if (prefix.size() == 0)
+    {
+        for(auto & element : m_MainMenu)
+        {
+            m_AuxMenu[element.first] = element.second;
+        }
+        return;
+    }
+
     for (auto &element : m_MainMenu)
     {
         if (element.first.find(prefix) == 0)
         {
-            std::string newstr(element.first, prefix.size(), element.first.size());
+            std::string_view newstr(element.first.data() + prefix.size(), element.first.size()-prefix.size()); 
             if (newstr[0] == ' ')
-                newstr.erase(newstr.begin());
+                newstr.remove_prefix(1);
 
             m_AuxMenu.insert({newstr, element.second});
         }
@@ -676,11 +745,6 @@ void Prompt::updateAuxMenu(const std::string &prefix)
     if (m_Prefix[0] == ' ')
         m_Prefix.erase(m_Prefix.begin());
 
-    if (m_AuxMenu.size() == 0)
-    {
-        m_AuxMenu = m_MainMenu;
-        m_Prefix.clear();
-    }
 }
 
 void Prompt::insertMapElement(std::string &&str, Callback cb)
