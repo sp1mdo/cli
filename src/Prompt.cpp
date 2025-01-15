@@ -3,7 +3,7 @@
 #include <vector>
 #include <algorithm>
 #include <iostream>
-#include <set>
+#include <cstdint>
 #include "Prompt.hpp"
 
 #if defined PICO_ON_DEVICE
@@ -31,12 +31,44 @@
 #define CYAN_COLOR "\033[36m"
 #define DEFAULT_COLOR "\033[0m"
 
-#define DEBUG 0
+#define DEBUG 1
 
-const std::string up_key = "\x1b\x5b\x41";
-const std::string down_key = "\x1b\x5b\x42";
-const std::string left_key = "\x1b\x5b\x44";
-const std::string right_key = "\x1b\x5b\x43";
+constexpr std::string_view up_key1{"\x1b\x5b\x41"};
+constexpr std::string_view up_key2{"\x1b\x4f\x41"};
+constexpr std::string_view down_key1{"\x1b\x5b\x42"};
+constexpr std::string_view down_key2{"\x1b\x4f\x42"};
+constexpr std::string_view left_key1{"\x1b\x5b\x44"};
+constexpr std::string_view left_key2{"\x1b\x4f\x44"};
+constexpr std::string_view right_key1{"\x1b\x5b\x43"};
+constexpr std::string_view right_key2{"\x1b\x4f\x43"};
+
+constexpr std::string_view f1_key1{"\x1b\x4f\x50"};
+constexpr std::string_view f1_key2{"\x1b\x5b\x31\x31\x7e"}; // done
+constexpr std::string_view f2_key1{"\x1b\x4f\x51"};
+constexpr std::string_view f2_key2{"\x1b\x5b\x31\x32\x7e"};
+constexpr std::string_view f3_key1{"\x1b\x4f\x52"};
+constexpr std::string_view f3_key2{"\x1b\x5b\x31\x33\x7e"};
+constexpr std::string_view f4_key1{"\x1b\x4f\x53"};
+constexpr std::string_view f4_key2{"\x1b\x5b\x31\x34\x7e"};
+constexpr std::string_view f5_key1{"\x1b\x5b\x31\x36\x7e"};
+constexpr std::string_view f5_key2{"\x1b\x5b\x31\x35\x7e"};
+constexpr std::string_view f5_key3{"\x1b\x4f\x54"};
+constexpr std::string_view f6_key1{"\x1b\x5b\x31\x37\x7e"};
+constexpr std::string_view f6_key2{"\x1b\x4f\x55"};
+constexpr std::string_view f7_key1{"\x1b\x5b\x31\x38\x7e"};
+constexpr std::string_view f7_key2{"\x1b\x4f\x56"};
+constexpr std::string_view f8_key1{"\x1b\x5b\x31\x39\x7e"};
+constexpr std::string_view f8_key2{"\x1b\x4f\x57"};
+constexpr std::string_view f9_key1{"\x1b\x5b\x32\x30\x7e"};
+constexpr std::string_view f9_key2{"\x1b\x4f\x58"};
+constexpr std::string_view f10_key1{"\x1b\x5b\x32\x31\x7e"};
+constexpr std::string_view f10_key2{"\x1b\x4f\x59"};
+constexpr std::string_view f11_key1{"\x1b\x5b\x32\x33\x7e"};
+constexpr std::string_view f11_key2{"\x1b\x4f\x5a"};
+constexpr std::string_view f12_key1{"\x1b\x5b\x32\x34\x7e"};
+constexpr std::string_view f12_key2{"\x1b\x4f\x5b"};
+
+constexpr size_t history_size{20};
 
 #ifdef UNIX
 const char newline_char = 10;
@@ -157,9 +189,6 @@ void Prompt::handleKey(void)
 
     if (z != tab_char) // any valid char, but not tab
     {
-        // if (z == up_key[0] || z == up_key[1])
-        //     return;
-
         m_Input.push_back(z);
         special_handling = handleSpecialCharacters();
 
@@ -222,7 +251,7 @@ void Prompt::removeLastWord(std::string &str)
 }
 
 template <typename... Args>
-bool containsAny(const std::string &str, const Args &...substrs)
+bool containsAny(const std::string_view &str, const Args &...substrs)
 {
     return ((str.find(substrs) != std::string::npos) || ...);
 }
@@ -230,7 +259,7 @@ bool containsAny(const std::string &str, const Args &...substrs)
 bool Prompt::handleSpecialCharacters(void)
 {
     // Handle key_up for scrolling the command history
-    if (containsAny(m_Input, "\x1b\x5b\x41", "\x1b\x4f\x41"))
+    if (containsAny(m_Input, up_key1, up_key2))
     {
         // Add dummy char to force print the prompt
         m_oldInput = m_Input + "\x05";
@@ -256,7 +285,7 @@ bool Prompt::handleSpecialCharacters(void)
     }
 
     // Handle key_down for scrolling the command history
-    if (containsAny(m_Input, "\x1b\x5b\x42", "\x1b\x4f\x42"))
+    if (containsAny(m_Input, down_key1, down_key2))
     {
         // Add dummy char to force print the prompt
         m_oldInput = m_Input + "\x05";
@@ -282,7 +311,7 @@ bool Prompt::handleSpecialCharacters(void)
     }
 
     // Left and Right arrows, just do nothing and prevent from messing the console
-    if (containsAny(m_Input, "\x1b\x5b\x43", "\x1b\x4f\x43", "\x1b\x5b\x44", "\x1b\x4f\x44"))
+    if (containsAny(m_Input, left_key1, left_key2, right_key1, right_key2))
     {
         m_Input.clear();
         return true;
@@ -290,62 +319,62 @@ bool Prompt::handleSpecialCharacters(void)
 
     ssize_t index = -1;
     // Handle key F1
-    if (containsAny(m_Input, "\x1b\x4f\x50", "\x1b\x5b\x31\x31\x7e")) // done
+    if (containsAny(m_Input, f1_key1, f1_key2)) // done
     {
         index = 0;
     }
     // Handle key F2
-    else if (containsAny(m_Input, "\x1b\x4f\x51", "\x1b\x5b\x31\x32\x7e"))
+    else if (containsAny(m_Input, f2_key1, f2_key2))
     {
         index = 1;
     }
     // Handle key F3
-    else if (containsAny(m_Input, "\x1b\x4f\x52", "\x1b\x5b\x31\x33\x7e"))
+    else if (containsAny(m_Input, f3_key1, f3_key2))
     {
         index = 2;
     }
     // Handle key F4
-    else if (containsAny(m_Input, "\x1b\x4f\x53", "\x1b\x5b\x31\x34\x7e"))
+    else if (containsAny(m_Input, f4_key1, f4_key2))
     {
         index = 3;
     }
     // Handle key F5
-    else if (containsAny(m_Input, "\x1b\x5b\x31\x36\x7e", "\x1b\x5b\x31\x35\x7e", "\x1b\x4f\x54"))
+    else if (containsAny(m_Input, f5_key1, f5_key2, f5_key3))
     {
         index = 4;
     }
     // Handle key F6
-    else if (containsAny(m_Input, "\x1b\x5b\x31\x37\x7e", "\x1b\x4f\x55"))
+    else if (containsAny(m_Input, f6_key1, f6_key2))
     {
         index = 5;
     }
     // Handle key F7
-    else if (containsAny(m_Input, "\x1b\x5b\x31\x38\x7e", "\x1b\x4f\x56"))
+    else if (containsAny(m_Input, f7_key1, f7_key2))
     {
         index = 6;
     }
     // Handle key F8
-    else if (containsAny(m_Input, "\x1b\x5b\x31\x39\x7e", "\x1b\x4f\x57"))
+    else if (containsAny(m_Input, f8_key1, f8_key2))
     {
         index = 7;
     }
     // Handle key F9
-    else if (containsAny(m_Input, "\x1b\x5b\x32\x30\x7e", "\x1b\x4f\x58"))
+    else if (containsAny(m_Input, f9_key1, f9_key2))
     {
         index = 8;
     }
     // Handle key F10
-    else if (containsAny(m_Input, "\x1b\x5b\x32\x31\x7e", "\x1b\x4f\x59"))
+    else if (containsAny(m_Input, f10_key1, f10_key2))
     {
         index = 9;
     }
     // Handle key F11
-    else if (containsAny(m_Input, "\x1b\x5b\x32\x33\x7e", "\x1b\x4f\x5a"))
+    else if (containsAny(m_Input, f11_key1, f11_key2))
     {
         index = 10;
     }
     // Handle key F12
-    else if (containsAny(m_Input, "\x1b\x5b\x32\x34\x7e", "\x1b\x4f\x5b"))
+    else if (containsAny(m_Input, f12_key1, f12_key2))
     {
         index = 11;
     }
@@ -466,7 +495,7 @@ void Prompt::parseCommand(void)
             else
                 m_CommandHistory.insert(m_CommandHistory.begin(), command + " " + args);
 
-            if (m_CommandHistory.size() > 20) // Limit the command history size
+            if (m_CommandHistory.size() > history_size) // Limit the command history size
                 m_CommandHistory.erase(m_CommandHistory.end());
 
             m_HistoryIndex = -1;
@@ -474,7 +503,7 @@ void Prompt::parseCommand(void)
         }
     }
 
-    if (cnt == 0 && (executed == false))
+    if (cnt == 0 && executed == false)
     {
         fprintf(stderr, "Unknown command\n");
     }
@@ -499,30 +528,6 @@ void Prompt::clear_line_back(size_t chars)
         printf(" ");
     for (size_t i = 0; i < chars; i++)
         printf("\b");
-}
-
-std::string Prompt::getFirstNWords(const std::string &input, size_t N)
-{
-    std::istringstream stream(input);
-    std::string word;
-    std::vector<std::string> words;
-    words.reserve(7); // Arbitraty number, anything is better than nothing
-    // Extract words from the string stream
-    while (stream >> word && words.size() < N)
-    {
-        words.emplace_back(std::move(word));
-    }
-
-    // Combine the first N words back into a single string
-    std::ostringstream result;
-    for (size_t i = 0; i < words.size(); ++i)
-    {
-        if (i > 0)
-            result << " "; // Add a space between words
-        result << std::move(words[i]);
-    }
-
-    return result.str();
 }
 
 size_t Prompt::countCharacterOccurrences(const std::string &input, char target)
@@ -607,7 +612,7 @@ void add_unique(std::vector<T> &uniqueVector, T &element)
     }
 }
 
-std::string_view getnwords(const std::string &substr, const std::string_view &str)
+std::string_view getNwords(const std::string &substr, const std::string_view &str)
 {
     size_t index;
     for (index = substr.size(); index <= str.size(); index++)
@@ -618,6 +623,7 @@ std::string_view getnwords(const std::string &substr, const std::string_view &st
         }
     }
 
+    // In case this is the very last word do one step back
     if(index+1 > str.size())
         index--;
 
@@ -635,7 +641,7 @@ int Prompt::try_match(void)
         if (element.first.find(m_Input) == 0)
         {
             match_count++;
-            std::string_view Nwords = getnwords(m_Input, element.first);
+            std::string_view Nwords = getNwords(m_Input, element.first);
             add_unique(matches, Nwords);
         }
     }

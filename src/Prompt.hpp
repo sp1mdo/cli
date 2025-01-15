@@ -115,5 +115,4 @@ private:
     void clear_line_back(size_t chars);
     void clear_line_fwd(size_t chars);
     void debug(void);
-    std::string getFirstNWords(const std::string &input, size_t N);
 };
