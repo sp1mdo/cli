@@ -29,10 +29,6 @@ enum class FnKey
     F10,
     F11,
     F12,
-    UP,    // causing unclear behaviour if removed
-    DOWN,  // causing unclear behaviour if removed
-    LEFT,  // causing unclear behaviour if removed
-    RIGHT, // causing unclear behaviour if removed
     LAST_ITEM,
 };
 
@@ -43,24 +39,6 @@ public:
     {
         setNonCanonicalMode();
         updateAuxMenu("");
-        m_FunctionKeys[static_cast<int>(FnKey::F1)] = "\x1b\x4f\x50";
-        m_FunctionKeys[static_cast<int>(FnKey::F2)] = "\x1b\x4f\x51";
-        m_FunctionKeys[static_cast<int>(FnKey::F3)] = "\x1b\x4f\x52";
-        m_FunctionKeys[static_cast<int>(FnKey::F4)] = "\x1b\x4f\x53";
-
-#if PICO_ON_DEVICE
-        m_FunctionKeys[static_cast<int>(FnKey::F5)] = "\x1b\x5b\x31\x36\x7e";
-#else
-        m_FunctionKeys[static_cast<int>(FnKey::F5)] = "\x1b\x5b\x31\x35\x7e";
-#endif
-        m_FunctionKeys[static_cast<int>(FnKey::F6)] = "\x1b\x5b\x31\x37\x7e";
-        m_FunctionKeys[static_cast<int>(FnKey::F7)] = "\x1b\x5b\x31\x38\x7e";
-        m_FunctionKeys[static_cast<int>(FnKey::F8)] = "\x1b\x5b\x31\x39\x7e";
-
-        m_FunctionKeys[static_cast<int>(FnKey::F9)] = "\x1b\x5b\x32\x30\x7e";
-        m_FunctionKeys[static_cast<int>(FnKey::F10)] = "\x1b\x5b\x32\x31\x7e";
-        m_FunctionKeys[static_cast<int>(FnKey::F11)] = "\x1b\x5b\x32\x33\x7e";
-        m_FunctionKeys[static_cast<int>(FnKey::F12)] = "\x1b\x5b\x32\x34\x7e";
 
         for (auto &element : m_FnKeyCallback)
         {
@@ -95,7 +73,6 @@ public:
     void attachFnKeyCallback(FnKey key, const std::function<void()> &cb);
 
     std::array<std::function<void()>, static_cast<int>(FnKey::F12) + 1> m_FnKeyCallback;
-    std::array<std::string, static_cast<int>(FnKey::LAST_ITEM)> m_FunctionKeys;
 
 private:
     bool special_state;

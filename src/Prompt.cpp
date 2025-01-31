@@ -31,7 +31,7 @@
 #define CYAN_COLOR "\033[36m"
 #define DEFAULT_COLOR "\033[0m"
 
-#define DEBUG 1
+#define DEBUG 0
 
 constexpr std::string_view up_key1{"\x1b\x5b\x41"};
 constexpr std::string_view up_key2{"\x1b\x4f\x41"};
