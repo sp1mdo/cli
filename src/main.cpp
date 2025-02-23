@@ -21,11 +21,13 @@ void special_function(int key)
     std::cout << "Pressed F" << key+1 << std::endl;
 }
 
+using namespace cli;
+
 int main(int argc, char **argv)
 {
     Prompt my_prompt("WORLD");
 
-    for(int i = static_cast<int>(FnKey::F1) ; i < static_cast<int>(FnKey::F12)+1 ; i++)
+    for(int i = static_cast<int>(FnKey::F1) ; i < static_cast<int>(FnKey::LAST_ITEM) ; i++)
     {
         my_prompt.attachFnKeyCallback(static_cast<FnKey>(i), std::bind(special_function, i));
     }
@@ -47,7 +49,7 @@ int main(int argc, char **argv)
         my_prompt.insertMapElement(std::move(line), std::bind(callback, fun_id++, std::placeholders::_1));
     }
 
-    my_prompt.spin_loop();
+    my_prompt.Run();
 
     return 0;
 }
