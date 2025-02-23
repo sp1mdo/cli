@@ -46,7 +46,7 @@ int main(int argc, char **argv)
     {
         std::transform(line.begin(), line.end(), line.begin(), [](unsigned char c)
                        { return std::tolower(c); });
-        my_prompt.insertMapElement(std::move(line), std::bind(callback, fun_id++, std::placeholders::_1));
+        my_prompt.insertMapElement(line, std::bind(callback, fun_id++, std::placeholders::_1));
     }
 
     my_prompt.Run();

@@ -47,7 +47,7 @@ namespace cli
         Prompt& operator=(Prompt&&) = delete;
 
         void Run(void);
-        void insertMapElement(std::string &&str, Callback cb);
+        void insertMapElement(std::string &str, Callback cb);
         void attachFnKeyCallback(FnKey key, const std::function<void()> &cb);
 
     private:

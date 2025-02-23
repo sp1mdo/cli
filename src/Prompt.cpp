@@ -807,7 +807,7 @@ void Prompt::updateAuxMenu(const std::string &prefix)
         m_Prefix.erase(m_Prefix.begin());
 }
 
-void Prompt::insertMapElement(std::string &&str, Callback cb)
+void Prompt::insertMapElement(std::string &str, Callback cb)
 {
     m_MainMenu.emplace(std::move(str), cb);
 }
