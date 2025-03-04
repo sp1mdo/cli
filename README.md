@@ -55,6 +55,6 @@ make
 ```
 where cities.txt is just a file with set of lines made with below pattern : [continent] [country] [city]
 
-So similarily using Prompt::insertMapElement() you can easiy create your own menu structure, where each command that contains a set of words, has corresponding function callback attached to it.
+So similarily using Prompt::insertMenuItem() you can easiy create your own menu structure, where each command that contains a set of words, has corresponding function callback attached to it.
 
 
