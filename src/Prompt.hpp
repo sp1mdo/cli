@@ -43,8 +43,8 @@ namespace cli
 
         Prompt(const Prompt &other) = delete;
         Prompt(Prompt &&other) = delete;
-        Prompt& operator=(const Prompt&) = delete;
-        Prompt& operator=(Prompt&&) = delete;
+        Prompt &operator=(const Prompt &) = delete;
+        Prompt &operator=(Prompt &&) = delete;
 
         void Run(void);
         void insertMapElement(std::string &str, Callback cb);
@@ -53,9 +53,9 @@ namespace cli
     private:
         std::map<std::string, Callback> m_MainMenu;
         std::map<std::string_view, Callback> m_AuxMenu;
-                std::array<std::function<void()>, static_cast<int>(FnKey::F12) + 1> m_FnKeyCallback;
+        std::array<std::function<void()>, static_cast<int>(FnKey::F12) + 1> m_FnKeyCallback;
 
-        bool special_state;
+        bool m_SpecialCharacterState;
         std::string m_Input;
         std::string m_Prefix;
         std::string m_Name;
@@ -70,7 +70,10 @@ namespace cli
         int tryMatch(void);
         void parseCommand(void);
 
-        size_t getMaxCommandLength(const std::vector<std::string> &commands);
+        template <typename T>
+        void add_unique(std::vector<T> &uniqueVector, T &element) const;
+        std::string_view getNwords(const std::string &substr, const std::string_view &str) const;
+        size_t getMaxCommandLength(const std::vector<std::string> &commands) const;
         void setNonCanonicalMode(void) const noexcept;
         void updateAuxMenu(const std::string &prefix);
         bool handleSpecialCharacters(void);
@@ -78,8 +81,8 @@ namespace cli
         size_t countCommonPrefixLength(const std::vector<std::string_view> &stringSet) const;
         size_t countCharacterOccurrences(const std::string &input, char target) const;
         std::string_view getLastWord(const std::string_view &input) const;
-        void clear_line_back(size_t chars)const noexcept;
-        void clear_line_fwd(size_t chars)const noexcept;
+        void clear_line_back(size_t chars) const noexcept;
+        void clear_line_fwd(size_t chars) const noexcept;
         void debug(void) const noexcept;
     };
 }

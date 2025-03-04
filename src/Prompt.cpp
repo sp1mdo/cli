@@ -35,44 +35,46 @@
 
 using namespace cli;
 
-constexpr std::string_view up_key1{"\x1b\x5b\x41"};
-constexpr std::string_view up_key2{"\x1b\x4f\x41"};
-constexpr std::string_view down_key1{"\x1b\x5b\x42"};
-constexpr std::string_view down_key2{"\x1b\x4f\x42"};
-constexpr std::string_view left_key1{"\x1b\x5b\x44"};
-constexpr std::string_view left_key2{"\x1b\x4f\x44"};
-constexpr std::string_view right_key1{"\x1b\x5b\x43"};
-constexpr std::string_view right_key2{"\x1b\x4f\x43"};
+static constexpr size_t CLEAR_BACK_CHARS{20};
 
-constexpr std::string_view f1_key1{"\x1b\x4f\x50"};
-constexpr std::string_view f1_key2{"\x1b\x5b\x31\x31\x7e"}; // done
-constexpr std::string_view f2_key1{"\x1b\x4f\x51"};
-constexpr std::string_view f2_key2{"\x1b\x5b\x31\x32\x7e"};
-constexpr std::string_view f3_key1{"\x1b\x4f\x52"};
-constexpr std::string_view f3_key2{"\x1b\x5b\x31\x33\x7e"};
-constexpr std::string_view f4_key1{"\x1b\x4f\x53"};
-constexpr std::string_view f4_key2{"\x1b\x5b\x31\x34\x7e"};
-constexpr std::string_view f5_key1{"\x1b\x5b\x31\x36\x7e"};
-constexpr std::string_view f5_key2{"\x1b\x5b\x31\x35\x7e"};
-constexpr std::string_view f5_key3{"\x1b\x4f\x54"};
-constexpr std::string_view f6_key1{"\x1b\x5b\x31\x37\x7e"};
-constexpr std::string_view f6_key2{"\x1b\x4f\x55"};
-constexpr std::string_view f7_key1{"\x1b\x5b\x31\x38\x7e"};
-constexpr std::string_view f7_key2{"\x1b\x4f\x56"};
-constexpr std::string_view f8_key1{"\x1b\x5b\x31\x39\x7e"};
-constexpr std::string_view f8_key2{"\x1b\x4f\x57"};
-constexpr std::string_view f9_key1{"\x1b\x5b\x32\x30\x7e"};
-constexpr std::string_view f9_key2{"\x1b\x4f\x58"};
-constexpr std::string_view f10_key1{"\x1b\x5b\x32\x31\x7e"};
-constexpr std::string_view f10_key2{"\x1b\x4f\x59"};
-constexpr std::string_view f11_key1{"\x1b\x5b\x32\x33\x7e"};
-constexpr std::string_view f11_key2{"\x1b\x4f\x5a"};
-constexpr std::string_view f12_key1{"\x1b\x5b\x32\x34\x7e"};
-constexpr std::string_view f12_key2{"\x1b\x4f\x5b"};
+static constexpr std::string_view UP_KEY1{"\x1b\x5b\x41"};
+static constexpr std::string_view UP_KEY2{"\x1b\x4f\x41"};
+static constexpr std::string_view DOWN_KEY1{"\x1b\x5b\x42"};
+static constexpr std::string_view DOWN_KEY2{"\x1b\x4f\x42"};
+static constexpr std::string_view LEFT_KEY1{"\x1b\x5b\x44"};
+static constexpr std::string_view LEFT_KEY2{"\x1b\x4f\x44"};
+static constexpr std::string_view RIGHT_KEY1{"\x1b\x5b\x43"};
+static constexpr std::string_view RIGHT_KEY2{"\x1b\x4f\x43"};
 
-constexpr char dummy_char = 0x05;
+static constexpr std::string_view F1_KEY1{"\x1b\x4f\x50"};
+static constexpr std::string_view F1_KEY2{"\x1b\x5b\x31\x31\x7e"}; // done
+static constexpr std::string_view F2_KEY1{"\x1b\x4f\x51"};
+static constexpr std::string_view F2_KEY2{"\x1b\x5b\x31\x32\x7e"};
+static constexpr std::string_view F3_KEY1{"\x1b\x4f\x52"};
+static constexpr std::string_view F3_KEY2{"\x1b\x5b\x31\x33\x7e"};
+static constexpr std::string_view F4_KEY1{"\x1b\x4f\x53"};
+static constexpr std::string_view F4_KEY2{"\x1b\x5b\x31\x34\x7e"};
+static constexpr std::string_view F5_KEY1{"\x1b\x5b\x31\x36\x7e"};
+static constexpr std::string_view F5_KEY2{"\x1b\x5b\x31\x35\x7e"};
+static constexpr std::string_view F5_KEY3{"\x1b\x4f\x54"};
+static constexpr std::string_view F6_KEY1{"\x1b\x5b\x31\x37\x7e"};
+static constexpr std::string_view F6_KEY2{"\x1b\x4f\x55"};
+static constexpr std::string_view F7_KEY1{"\x1b\x5b\x31\x38\x7e"};
+static constexpr std::string_view F7_KEY2{"\x1b\x4f\x56"};
+static constexpr std::string_view F8_KEY1{"\x1b\x5b\x31\x39\x7e"};
+static constexpr std::string_view F8_KEY2{"\x1b\x4f\x57"};
+static constexpr std::string_view F9_KEY1{"\x1b\x5b\x32\x30\x7e"};
+static constexpr std::string_view F9_KEY2{"\x1b\x4f\x58"};
+static constexpr std::string_view F10_KEY1{"\x1b\x5b\x32\x31\x7e"};
+static constexpr std::string_view F10_KEY2{"\x1b\x4f\x59"};
+static constexpr std::string_view F11_KEY1{"\x1b\x5b\x32\x33\x7e"};
+static constexpr std::string_view F11_KEY2{"\x1b\x4f\x5a"};
+static constexpr std::string_view F12_KEY1{"\x1b\x5b\x32\x34\x7e"};
+static constexpr std::string_view F12_KEY2{"\x1b\x4f\x5b"};
 
-constexpr size_t history_size{20};
+static constexpr char dummy_char = 0x05;
+
+static constexpr size_t history_size{20};
 
 #ifdef UNIX
 const char newline_char = 10;
@@ -81,15 +83,21 @@ const char backspace_char = 0x7f;
 const char newline_char = 13;
 const char backspace_char = 0x08;
 #endif
+
+static constexpr char UNIX_NEWLINE_CHAR{0x0A};
+static constexpr char UNIX_BACKSPACE_CHAR{0x7F};
+
+static constexpr char PICO_NEWLINE_CHAR{0x0D};
+static constexpr char PICO_BACKSPACE_CHAR{0x08};
+
 const char tab_char = 0x09;
 
 uint32_t alloc_count = 0;
 // 536948456 - max memory before dead
 
-#if DEBUG
+#if DEBUG // Tool, to analyze how certain STL solution is allocation-efficient
 void *operator new(size_t size) noexcept
 {
-    // alloc_count++;
     void *p = malloc(size);
     alloc_count++;
     return p;
@@ -116,18 +124,15 @@ void dumpString(const std::string &str)
 template <typename T, typename... Args>
 constexpr bool isEqualToAny(T value, Args... args)
 {
-    return ((value == args) || ...); // Fold expression
+    return ((value == args) || ...);
 }
 
-Prompt::Prompt(const std::string &name) : special_state(false), m_Name(name), m_HistoryIndex(-1), m_oldInput("dummy")
+Prompt::Prompt(const std::string &name) : m_SpecialCharacterState(false), m_Name(name), m_HistoryIndex(-1), m_oldInput("dummy")
 {
     setNonCanonicalMode();
     updateAuxMenu("");
 
-    for (auto &element : m_FnKeyCallback)
-    {
-        element = nullptr;
-    }
+    std::for_each(m_FnKeyCallback.begin(), m_FnKeyCallback.end(), [](auto &element) { element = nullptr; });
 };
 
 void Prompt::Run(void)
@@ -167,7 +172,7 @@ void Prompt::handleKey(void)
     static uint16_t sum = 1;
     char z = 0;
     print();
-#ifdef PICO_ON_DEVICE
+#ifdef PICO_ON_DEVICE // specific for Raspberry pico RP2040
     int x = getchar_timeout_us(10);
     if (x == PICO_ERROR_TIMEOUT)
         return;
@@ -183,35 +188,35 @@ void Prompt::handleKey(void)
     
 
     // Pressed some special key that corresponds with sequence of bytes
-    if (z == 0x1b && special_state == false)
+    if (z == 0x1b && m_SpecialCharacterState == false)
     {
-        special_state = true;
+        m_SpecialCharacterState = true;
         m_Input.push_back(z);
         return;
     }
 
-    // Recovery from being stuck in special_state
-    if (z == 0x1b && special_state == true) 
+    // Recovery from being stuck in m_SpecialCharacterState
+    if (z == 0x1b && m_SpecialCharacterState == true) 
     {
-        special_state = false;
+        m_SpecialCharacterState = false;
         m_Input.clear();
-        clear_line_back(20);
+        clear_line_back(CLEAR_BACK_CHARS);
         return;
     }
 
-    if ((isEqualToAny(z, 0x08, 0x7f) /* backspace */ && m_Input.empty() == true && m_Prefix.empty() == true))
+    if ((isEqualToAny(z, PICO_BACKSPACE_CHAR, UNIX_BACKSPACE_CHAR) /* backspace */ && m_Input.empty() == true && m_Prefix.empty() == true))
     {
         // Prefix is empty, just do nothing
         return;
     }
 
-    if ((isEqualToAny(z, 0x08, 0x7f) /* backspace */ && m_Input.empty() == true && m_Prefix.empty() == false))
+    if ((isEqualToAny(z, PICO_BACKSPACE_CHAR, UNIX_BACKSPACE_CHAR) /* backspace */ && m_Input.empty() == true && m_Prefix.empty() == false))
     {
         m_oldInput = m_Input + dummy_char;
         removeLastWord(m_Prefix);
         updateAuxMenu(m_Prefix);
         m_Input.clear();
-        clear_line_back(20);
+        clear_line_back(CLEAR_BACK_CHARS);
         print();
         return;
     }
@@ -223,14 +228,14 @@ void Prompt::handleKey(void)
 
         if (special_handling)
         {
-            special_state = false;
+            m_SpecialCharacterState = false;
             print();
             clear_line_fwd(50);
             return;
         }
     }
     size_t num = 0;
-    if (isEqualToAny(z, 0x08, 0x7f)) // backspace
+    if (isEqualToAny(z, UNIX_BACKSPACE_CHAR, PICO_BACKSPACE_CHAR)) // backspace
     {
         backspace();
     }
@@ -250,7 +255,7 @@ void Prompt::handleKey(void)
         print();
     }
 
-    if (isEqualToAny(z, 0x0a, 0x0d)) // newline
+    if (isEqualToAny(z, UNIX_NEWLINE_CHAR, PICO_NEWLINE_CHAR)) // newline
     {
 #ifdef PICO_ON_DEVICE
         printf("\n");
@@ -288,13 +293,13 @@ bool containsAny(const std::string_view &str, const Args &...substrs)
 bool Prompt::handleSpecialCharacters(void)
 {
     // Handle key_up for scrolling the command history
-    if (containsAny(m_Input, up_key1, up_key2))
+    if (containsAny(m_Input, UP_KEY1, UP_KEY2))
     {
         // Add dummy char to force print the prompt
         m_oldInput = m_Input + dummy_char;
 
         //Specific for Putty, requires to compensate cursor moving up
-        if (m_Input.find(up_key2) != std::string::npos)
+        if (m_Input.find(UP_KEY2) != std::string::npos)
             printf("\n");
 
         m_Input.clear();
@@ -316,7 +321,7 @@ bool Prompt::handleSpecialCharacters(void)
     }
 
     // Handle key_down for scrolling the command history
-    if (containsAny(m_Input, down_key1, down_key2))
+    if (containsAny(m_Input, DOWN_KEY1, DOWN_KEY2))
     {
         // Add dummy char to force print the prompt
         m_oldInput = m_Input + dummy_char;
@@ -342,7 +347,7 @@ bool Prompt::handleSpecialCharacters(void)
     }
 
     // Left and Right arrows, just do nothing and prevent from messing the console
-    if (containsAny(m_Input, left_key1, left_key2, right_key1, right_key2))
+    if (containsAny(m_Input, LEFT_KEY1, LEFT_KEY2, RIGHT_KEY1, RIGHT_KEY2))
     {
         m_Input.clear();
         return true;
@@ -350,62 +355,62 @@ bool Prompt::handleSpecialCharacters(void)
 
     ssize_t index = -1;
     // Handle key F1
-    if (containsAny(m_Input, f1_key1, f1_key2)) // done
+    if (containsAny(m_Input, F1_KEY1, F1_KEY2)) // done
     {
         index = 0;
     }
     // Handle key F2
-    else if (containsAny(m_Input, f2_key1, f2_key2))
+    else if (containsAny(m_Input, F2_KEY1, F2_KEY2))
     {
         index = 1;
     }
     // Handle key F3
-    else if (containsAny(m_Input, f3_key1, f3_key2))
+    else if (containsAny(m_Input, F3_KEY1, F3_KEY2))
     {
         index = 2;
     }
     // Handle key F4
-    else if (containsAny(m_Input, f4_key1, f4_key2))
+    else if (containsAny(m_Input, F4_KEY1, F4_KEY2))
     {
         index = 3;
     }
     // Handle key F5
-    else if (containsAny(m_Input, f5_key1, f5_key2, f5_key3))
+    else if (containsAny(m_Input, F5_KEY1, F5_KEY2, F5_KEY3))
     {
         index = 4;
     }
     // Handle key F6
-    else if (containsAny(m_Input, f6_key1, f6_key2))
+    else if (containsAny(m_Input, F6_KEY1, F6_KEY2))
     {
         index = 5;
     }
     // Handle key F7
-    else if (containsAny(m_Input, f7_key1, f7_key2))
+    else if (containsAny(m_Input, F7_KEY1, F7_KEY2))
     {
         index = 6;
     }
     // Handle key F8
-    else if (containsAny(m_Input, f8_key1, f8_key2))
+    else if (containsAny(m_Input, F8_KEY1, F8_KEY2))
     {
         index = 7;
     }
     // Handle key F9
-    else if (containsAny(m_Input, f9_key1, f9_key2))
+    else if (containsAny(m_Input, F9_KEY1, F9_KEY2))
     {
         index = 8;
     }
     // Handle key F10
-    else if (containsAny(m_Input, f10_key1, f10_key2))
+    else if (containsAny(m_Input, F10_KEY1, F10_KEY2))
     {
         index = 9;
     }
     // Handle key F11
-    else if (containsAny(m_Input, f11_key1, f11_key2))
+    else if (containsAny(m_Input, F11_KEY1, F11_KEY2))
     {
         index = 10;
     }
     // Handle key F12
-    else if (containsAny(m_Input, f12_key1, f12_key2))
+    else if (containsAny(m_Input, F12_KEY1, F12_KEY2))
     {
         index = 11;
     }
@@ -444,12 +449,12 @@ bool Prompt::backspace(void) // todo void
         m_Input.pop_back();
     }
 
-    clear_line_back(20);
+    clear_line_back(CLEAR_BACK_CHARS);
 
     return true;
 }
 
-size_t Prompt::getMaxCommandLength(const std::vector<std::string> &commands)
+size_t Prompt::getMaxCommandLength(const std::vector<std::string> &commands) const
 {
     size_t maxLength = 0;
 
@@ -464,7 +469,7 @@ size_t Prompt::getMaxCommandLength(const std::vector<std::string> &commands)
 
 void Prompt::parseCommand(void)
 {
-    while (isEqualToAny(m_Input.back(), ' ', 0x0a, 0x0d)) // trim all newline chars and spaces at the end of input str
+    while (isEqualToAny(m_Input.back(), ' ', UNIX_NEWLINE_CHAR, PICO_NEWLINE_CHAR)) // trim all newline chars and spaces at the end of input str
         m_Input.pop_back();
 
     size_t cnt = 0;
@@ -504,7 +509,7 @@ void Prompt::parseCommand(void)
             fprintf(stderr, "\nUnknown command\n");
 
         m_Input.clear();
-        clear_line_back(20);
+        clear_line_back(CLEAR_BACK_CHARS);
         return;
     }
 
@@ -653,7 +658,7 @@ size_t Prompt::countCommonPrefixLength(const std::vector<std::string_view> &stri
 }
 
 template <typename T>
-void add_unique(std::vector<T> &uniqueVector, T &element)
+void Prompt::add_unique(std::vector<T> &uniqueVector, T &element) const
 {
     // Check if the value already exists in the vector
     if (std::find(uniqueVector.begin(), uniqueVector.end(), element) == uniqueVector.end())
@@ -662,7 +667,7 @@ void add_unique(std::vector<T> &uniqueVector, T &element)
     }
 }
 
-std::string_view getNwords(const std::string &substr, const std::string_view &str)
+std::string_view Prompt::getNwords(const std::string &substr, const std::string_view &str) const
 {
     size_t index;
     for (index = substr.size(); index <= str.size(); index++)
@@ -732,7 +737,7 @@ void Prompt::print(void) noexcept
 {
     // Print only when content is changed, otherwise skip.
     // Skip printing while entering special chars like \x1b
-    if (special_state == true || m_oldInput == m_Input)
+    if (m_SpecialCharacterState == true || m_oldInput == m_Input)
         return;
 
 #if DEBUG
