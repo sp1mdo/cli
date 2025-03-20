@@ -1,4 +1,4 @@
-#include <stdio.h>
+#include <cstdio>
 #include <string>
 #include <vector>
 #include <functional>
@@ -18,7 +18,7 @@ void callback(int id, const std::string &str)
 
 void special_function(int key)
 {
-    std::cout << "Pressed F" << key+1 << std::endl;
+    std::cout << "Pressed F" << key + 1 << std::endl;
 }
 
 using namespace cli;
@@ -27,9 +27,10 @@ int main(int argc, char **argv)
 {
     Prompt my_prompt("WORLD");
 
-    for(int i = static_cast<int>(FnKey::F1) ; i < static_cast<int>(FnKey::LAST_ITEM) ; i++)
+    for (int i = static_cast<int>(FnKey::F1); i < static_cast<int>(FnKey::LAST_ITEM); i++)
     {
-        my_prompt.attachFnKeyCallback(static_cast<FnKey>(i), std::bind(special_function, i));
+        my_prompt.attachFnKeyCallback(static_cast<FnKey>(i), [i]()
+                                      { special_function(i); });
     }
 
     std::ifstream file(argv[1]);
@@ -40,16 +41,19 @@ int main(int argc, char **argv)
         std::cerr << "Failed to open the file." << std::endl;
         return 1;
     }
+
     int fun_id = 0;
     std::string line;
     while (std::getline(file, line))
     {
         std::transform(line.begin(), line.end(), line.begin(), [](unsigned char c)
                        { return std::tolower(c); });
-        my_prompt.insertMenuItem(line, std::bind(callback, fun_id++, std::placeholders::_1));
+        my_prompt.insertMenuItem(line, [fun_id](const std::string x)
+                                 { callback(fun_id, x); });
+        ++fun_id;
     }
 
-    my_prompt.Run();
+    my_prompt.run();
 
     return 0;
 }

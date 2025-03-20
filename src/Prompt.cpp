@@ -27,76 +27,65 @@
 #include <conio.h> // For _getch()
 #endif
 
-#define GREEN_COLOR "\033[32m"
-#define CYAN_COLOR "\033[36m"
-#define DEFAULT_COLOR "\033[0m"
-
-#define DEBUG 0
+constexpr auto GREEN_COLOR{"\033[32m"};
+constexpr auto CYAN_COLOR{"\033[36m"};
+constexpr auto DEFAULT_COLOR{"\033[0m"};
 
 using namespace cli;
+using namespace std::literals;
 
-static constexpr size_t CLEAR_BACK_CHARS{20};
+static constexpr std::size_t CLEAR_BACK_CHARS{20};
 
-static constexpr std::string_view UP_KEY1{"\x1b\x5b\x41"};
-static constexpr std::string_view UP_KEY2{"\x1b\x4f\x41"};
-static constexpr std::string_view DOWN_KEY1{"\x1b\x5b\x42"};
-static constexpr std::string_view DOWN_KEY2{"\x1b\x4f\x42"};
-static constexpr std::string_view LEFT_KEY1{"\x1b\x5b\x44"};
-static constexpr std::string_view LEFT_KEY2{"\x1b\x4f\x44"};
-static constexpr std::string_view RIGHT_KEY1{"\x1b\x5b\x43"};
-static constexpr std::string_view RIGHT_KEY2{"\x1b\x4f\x43"};
+static constexpr auto UP_KEY1{"\x1b\x5b\x41"sv};
+static constexpr auto UP_KEY2{"\x1b\x4f\x41"sv};
+static constexpr auto DOWN_KEY1{"\x1b\x5b\x42"sv};
+static constexpr auto DOWN_KEY2{"\x1b\x4f\x42"sv};
+static constexpr auto LEFT_KEY1{"\x1b\x5b\x44"sv};
+static constexpr auto LEFT_KEY2{"\x1b\x4f\x44"sv};
+static constexpr auto RIGHT_KEY1{"\x1b\x5b\x43"sv};
+static constexpr auto RIGHT_KEY2{"\x1b\x4f\x43"sv};
 
-static constexpr std::string_view F1_KEY1{"\x1b\x4f\x50"};
-static constexpr std::string_view F1_KEY2{"\x1b\x5b\x31\x31\x7e"}; // done
-static constexpr std::string_view F2_KEY1{"\x1b\x4f\x51"};
-static constexpr std::string_view F2_KEY2{"\x1b\x5b\x31\x32\x7e"};
-static constexpr std::string_view F3_KEY1{"\x1b\x4f\x52"};
-static constexpr std::string_view F3_KEY2{"\x1b\x5b\x31\x33\x7e"};
-static constexpr std::string_view F4_KEY1{"\x1b\x4f\x53"};
-static constexpr std::string_view F4_KEY2{"\x1b\x5b\x31\x34\x7e"};
-static constexpr std::string_view F5_KEY1{"\x1b\x5b\x31\x36\x7e"};
-static constexpr std::string_view F5_KEY2{"\x1b\x5b\x31\x35\x7e"};
-static constexpr std::string_view F5_KEY3{"\x1b\x4f\x54"};
-static constexpr std::string_view F6_KEY1{"\x1b\x5b\x31\x37\x7e"};
-static constexpr std::string_view F6_KEY2{"\x1b\x4f\x55"};
-static constexpr std::string_view F7_KEY1{"\x1b\x5b\x31\x38\x7e"};
-static constexpr std::string_view F7_KEY2{"\x1b\x4f\x56"};
-static constexpr std::string_view F8_KEY1{"\x1b\x5b\x31\x39\x7e"};
-static constexpr std::string_view F8_KEY2{"\x1b\x4f\x57"};
-static constexpr std::string_view F9_KEY1{"\x1b\x5b\x32\x30\x7e"};
-static constexpr std::string_view F9_KEY2{"\x1b\x4f\x58"};
-static constexpr std::string_view F10_KEY1{"\x1b\x5b\x32\x31\x7e"};
-static constexpr std::string_view F10_KEY2{"\x1b\x4f\x59"};
-static constexpr std::string_view F11_KEY1{"\x1b\x5b\x32\x33\x7e"};
-static constexpr std::string_view F11_KEY2{"\x1b\x4f\x5a"};
-static constexpr std::string_view F12_KEY1{"\x1b\x5b\x32\x34\x7e"};
-static constexpr std::string_view F12_KEY2{"\x1b\x4f\x5b"};
+static constexpr auto F1_KEY1{"\x1b\x4f\x50"sv};
+static constexpr auto F1_KEY2{"\x1b\x5b\x31\x31\x7e"sv};
+static constexpr auto F2_KEY1{"\x1b\x4f\x51"sv};
+static constexpr auto F2_KEY2{"\x1b\x5b\x31\x32\x7e"sv};
+static constexpr auto F3_KEY1{"\x1b\x4f\x52"sv};
+static constexpr auto F3_KEY2{"\x1b\x5b\x31\x33\x7e"sv};
+static constexpr auto F4_KEY1{"\x1b\x4f\x53"sv};
+static constexpr auto F4_KEY2{"\x1b\x5b\x31\x34\x7e"sv};
+static constexpr auto F5_KEY1{"\x1b\x5b\x31\x36\x7e"sv};
+static constexpr auto F5_KEY2{"\x1b\x5b\x31\x35\x7e"sv};
+static constexpr auto F5_KEY3{"\x1b\x4f\x54"sv};
+static constexpr auto F6_KEY1{"\x1b\x5b\x31\x37\x7e"sv};
+static constexpr auto F6_KEY2{"\x1b\x4f\x55"sv};
+static constexpr auto F7_KEY1{"\x1b\x5b\x31\x38\x7e"sv};
+static constexpr auto F7_KEY2{"\x1b\x4f\x56"sv};
+static constexpr auto F8_KEY1{"\x1b\x5b\x31\x39\x7e"sv};
+static constexpr auto F8_KEY2{"\x1b\x4f\x57"sv};
+static constexpr auto F9_KEY1{"\x1b\x5b\x32\x30\x7e"sv};
+static constexpr auto F9_KEY2{"\x1b\x4f\x58"sv};
+static constexpr auto F10_KEY1{"\x1b\x5b\x32\x31\x7e"sv};
+static constexpr auto F10_KEY2{"\x1b\x4f\x59"sv};
+static constexpr auto F11_KEY1{"\x1b\x5b\x32\x33\x7e"sv};
+static constexpr auto F11_KEY2{"\x1b\x4f\x5a"sv};
+static constexpr auto F12_KEY1{"\x1b\x5b\x32\x34\x7e"sv};
+static constexpr auto F12_KEY2{"\x1b\x4f\x5b"sv};
 
 static constexpr char dummy_char = 0x05;
 
-static constexpr size_t history_size{20};
-
-#ifdef UNIX
-const char newline_char = 10;
-const char backspace_char = 0x7f;
-#elif defined PICO_ON_DEVICE
-const char newline_char = 13;
-const char backspace_char = 0x08;
-#endif
+static constexpr std::size_t history_size{20};
 
 static constexpr char UNIX_NEWLINE_CHAR{0x0A};
 static constexpr char UNIX_BACKSPACE_CHAR{0x7F};
-
 static constexpr char PICO_NEWLINE_CHAR{0x0D};
 static constexpr char PICO_BACKSPACE_CHAR{0x08};
+static constexpr char ESC_KEY{0x1b};
+static constexpr char TAB_KEY{0x09};
 
-const char tab_char = 0x09;
-
-uint32_t alloc_count = 0;
-// 536948456 - max memory before dead
+std::uint32_t alloc_count = 0;
 
 #if DEBUG // Tool, to analyze how certain STL solution is allocation-efficient
-void *operator new(size_t size) noexcept
+void *operator new(std::size_t size) noexcept
 {
     void *p = malloc(size);
     alloc_count++;
@@ -112,12 +101,12 @@ void operator delete(void *p) noexcept
 
 void dumpString(const std::string &str)
 {
-    printf("\n[");
-    for (auto &xchar : str)
+    std::printf("\n[");
+    for (auto xchar : str)
     {
-        printf("%02x ", xchar);
+        std::printf("%02x ", xchar);
     }
-    printf("]\n");
+    std::printf("]\n");
 }
 
 // Variadic template function to check equality with multiple values
@@ -127,19 +116,20 @@ constexpr bool isEqualToAny(T value, Args... args)
     return ((value == args) || ...);
 }
 
-Prompt::Prompt(const std::string &name) : m_SpecialCharacterState(false), m_Name(name), m_HistoryIndex(-1), m_oldInput("dummy")
+Prompt::Prompt(std::string_view name) : m_specialCharacterState{false}, m_Name{name}, m_historyIndex{-1}, m_oldInput{"dummy"}
 {
     setNonCanonicalMode();
-    updateAuxMenu("");
+    updateAuxMenu();
 
-    std::for_each(m_FnKeyCallback.begin(), m_FnKeyCallback.end(), [](auto &element) { element = nullptr; });
+    std::for_each(m_FnKeyCallback.begin(), m_FnKeyCallback.end(), [](auto &element)
+                  { element = nullptr; });
 };
 
-void Prompt::Run(void)
+void Prompt::run(void)
 {
-    updateAuxMenu("");
+    updateAuxMenu();
     print();
-    while (1)
+    while (true)
     {
         handleKey();
     }
@@ -148,7 +138,7 @@ void Prompt::Run(void)
 void Prompt::setNonCanonicalMode(void) const noexcept
 {
 #ifdef UNIX
-    struct termios newt, oldt;
+    termios newt, oldt;
 
     // Get the current terminal settings
     tcgetattr(STDIN_FILENO, &oldt);
@@ -169,8 +159,7 @@ void Prompt::setNonCanonicalMode(void) const noexcept
 void Prompt::handleKey(void)
 {
     bool special_handling = false;
-    static uint16_t sum = 1;
-    char z = 0;
+    char z{0};
     print();
 #ifdef PICO_ON_DEVICE // specific for Raspberry pico RP2040
     int x = getchar_timeout_us(10);
@@ -182,83 +171,76 @@ void Prompt::handleKey(void)
     int x = _getch();
 #endif
 
-    z = (char)x;
-    // printf("\r%02x\n", z); // debug purpose
+    z = static_cast<char>(x);
+    // std::printf("\r%02x\n", z); // debug purpose
     // return;
-    
 
-    // Pressed some special key that corresponds with sequence of bytes
-    if (z == 0x1b && m_SpecialCharacterState == false)
+    if (z == ESC_KEY)
     {
-        m_SpecialCharacterState = true;
-        m_Input.push_back(z);
+        // Recovery from being stuck in m_specialCharacterState
+        if (m_specialCharacterState)
+        {
+            m_specialCharacterState = false;
+            m_Input.clear();
+            clearLineBack(CLEAR_BACK_CHARS);
+            return;
+        }
+        // Pressed some special key that corresponds with sequence of bytes
+        else
+        {
+            m_specialCharacterState = true;
+            m_Input.push_back(z);
+            return;
+        }
+    }
+
+    if ((isEqualToAny(z, PICO_BACKSPACE_CHAR, UNIX_BACKSPACE_CHAR) && m_Input.empty() == true))
+    {
+        if (!m_Prefix.empty())
+        {
+            m_oldInput = m_Input + dummy_char;
+            removeLastWord(m_Prefix);
+            updateAuxMenu(m_Prefix);
+            m_Input.clear();
+            clearLineBack(CLEAR_BACK_CHARS);
+            print();
+        }
         return;
     }
 
-    // Recovery from being stuck in m_SpecialCharacterState
-    if (z == 0x1b && m_SpecialCharacterState == true) 
-    {
-        m_SpecialCharacterState = false;
-        m_Input.clear();
-        clear_line_back(CLEAR_BACK_CHARS);
-        return;
-    }
-
-    if ((isEqualToAny(z, PICO_BACKSPACE_CHAR, UNIX_BACKSPACE_CHAR) /* backspace */ && m_Input.empty() == true && m_Prefix.empty() == true))
-    {
-        // Prefix is empty, just do nothing
-        return;
-    }
-
-    if ((isEqualToAny(z, PICO_BACKSPACE_CHAR, UNIX_BACKSPACE_CHAR) /* backspace */ && m_Input.empty() == true && m_Prefix.empty() == false))
-    {
-        m_oldInput = m_Input + dummy_char;
-        removeLastWord(m_Prefix);
-        updateAuxMenu(m_Prefix);
-        m_Input.clear();
-        clear_line_back(CLEAR_BACK_CHARS);
-        print();
-        return;
-    }
-
-    if (z != tab_char) // any valid char, but not tab
+    if (z != TAB_KEY) // any valid char, but not tab
     {
         m_Input.push_back(z);
         special_handling = handleSpecialCharacters();
 
         if (special_handling)
         {
-            m_SpecialCharacterState = false;
+            m_specialCharacterState = false;
             print();
-            clear_line_fwd(50);
+            clearLineFwd(50);
             return;
         }
     }
-    size_t num = 0;
+    std::size_t num = 0;
     if (isEqualToAny(z, UNIX_BACKSPACE_CHAR, PICO_BACKSPACE_CHAR)) // backspace
     {
         backspace();
     }
-    else if (z == tab_char) // tab
+    else if (z == TAB_KEY) // tab
     {
         num = tryMatch();
         m_oldInput = m_Input + dummy_char; // add dummy char to force printin the prompt
     }
 
-    if (z != tab_char || num > 0 || special_handling)
+    if (z != TAB_KEY || num > 0 || special_handling)
     {
-        sum = 0;
-        for (size_t i = 0; i < m_Input.size(); i++)
-        {
-            sum = sum + m_Input[i];
-        }
         print();
     }
 
     if (isEqualToAny(z, UNIX_NEWLINE_CHAR, PICO_NEWLINE_CHAR)) // newline
     {
 #ifdef PICO_ON_DEVICE
-        printf("\n");
+        std::printf("\n");
 #endif
         parseCommand();
         print();
@@ -267,7 +249,7 @@ void Prompt::handleKey(void)
 
 void Prompt::debug(void) const noexcept
 {
-    printf("\n[%s] \n", m_Input.c_str());
+    std::printf("\n[%s] \n", m_Input.c_str());
 }
 
 void Prompt::removeLastWord(std::string &str) const
@@ -285,7 +267,7 @@ void Prompt::removeLastWord(std::string &str) const
 }
 
 template <typename... Args>
-bool containsAny(const std::string_view &str, const Args &...substrs)
+bool containsAny(std::string_view str, const Args &...substrs)
 {
     return ((str.find(substrs) != std::string::npos) || ...);
 }
@@ -298,25 +280,25 @@ bool Prompt::handleSpecialCharacters(void)
         // Add dummy char to force print the prompt
         m_oldInput = m_Input + dummy_char;
 
-        //Specific for Putty, requires to compensate cursor moving up
+        // Specific for Putty, requires to compensate cursor moving up
         if (m_Input.find(UP_KEY2) != std::string::npos)
-            printf("\n");
+            std::printf("\n");
 
         m_Input.clear();
         if (m_CommandHistory.empty() == true)
         {
             return true;
         }
-        m_HistoryIndex++;
-        if (m_HistoryIndex >= 0)
+        m_historyIndex++;
+        if (m_historyIndex >= 0)
         {
-            if (m_HistoryIndex >= (int)m_CommandHistory.size())
-                m_HistoryIndex = m_CommandHistory.size() - 1;
+            if (m_historyIndex >= static_cast<int>(m_CommandHistory.size()))
+                m_historyIndex = m_CommandHistory.size() - 1;
         }
 
-        m_Input = m_CommandHistory[m_HistoryIndex];
+        m_Input = m_CommandHistory[m_historyIndex];
 
-        clear_line_back(50);
+        clearLineBack(50);
         return true;
     }
 
@@ -332,15 +314,15 @@ bool Prompt::handleSpecialCharacters(void)
             return true;
         }
 
-        m_HistoryIndex--;
-        if (m_HistoryIndex < 0)
+        m_historyIndex--;
+        if (m_historyIndex < 0)
         {
             m_Input.clear();
-            m_HistoryIndex = -1;
+            m_historyIndex = -1;
         }
         else
         {
-            m_Input = m_CommandHistory[m_HistoryIndex];
+            m_Input = m_CommandHistory[m_historyIndex];
         }
 
         return true;
@@ -353,7 +335,7 @@ bool Prompt::handleSpecialCharacters(void)
         return true;
     }
 
-    ssize_t index = -1;
+    ssize_t index = -1; // TODO, something else could be here, like std::optional
     // Handle key F1
     if (containsAny(m_Input, F1_KEY1, F1_KEY2)) // done
     {
@@ -417,7 +399,7 @@ bool Prompt::handleSpecialCharacters(void)
 
     if (index != -1)
     {
-        printf("\n "); // this avoids  moving the cursor up
+        std::printf("\n "); // this avoids  moving the cursor up
         m_oldInput = m_Input + dummy_char;
         m_Input.clear();
         try
@@ -425,10 +407,10 @@ bool Prompt::handleSpecialCharacters(void)
             if (m_FnKeyCallback[index])
                 m_FnKeyCallback[index]();
             else
-                printf("\nF%zu has no function attached to it.\n", index + 1);
+                std::printf("\nF%zu has no function attached to it.\n", index + 1);
             return true;
         }
-        catch(std::exception &e)
+        catch (std::exception &e)
         {
             std::cout << "Exception occured:" << e.what();
         }
@@ -438,7 +420,7 @@ bool Prompt::handleSpecialCharacters(void)
 
 bool Prompt::backspace(void) // todo void
 {
-    printf("\b \b");
+    std::printf("\b \b");
 
     if (m_Input.size() > 0)
     {
@@ -449,18 +431,18 @@ bool Prompt::backspace(void) // todo void
         m_Input.pop_back();
     }
 
-    clear_line_back(CLEAR_BACK_CHARS);
+    clearLineBack(CLEAR_BACK_CHARS);
 
     return true;
 }
 
-size_t Prompt::getMaxCommandLength(const std::vector<std::string> &commands) const
+std::size_t Prompt::getMaxCommandLength(const std::vector<std::string> &commands) const
 {
-    size_t maxLength = 0;
+    std::size_t maxLength = 0;
 
-    for(auto & command : commands)
+    for (auto &command : commands)
     {
-        if(maxLength < command.size())
+        if (maxLength < command.size())
             maxLength = command.size();
     }
 
@@ -472,7 +454,7 @@ void Prompt::parseCommand(void)
     while (isEqualToAny(m_Input.back(), ' ', UNIX_NEWLINE_CHAR, PICO_NEWLINE_CHAR)) // trim all newline chars and spaces at the end of input str
         m_Input.pop_back();
 
-    size_t cnt = 0;
+    std::size_t cnt = 0;
     bool last = false;
     bool found = false;
 
@@ -506,15 +488,15 @@ void Prompt::parseCommand(void)
         if (found == true)
             updateAuxMenu(updatestr);
         else
-            fprintf(stderr, "\nUnknown command\n");
+            std::fprintf(stderr, "\nUnknown command\n");
 
         m_Input.clear();
-        clear_line_back(CLEAR_BACK_CHARS);
+        clearLineBack(CLEAR_BACK_CHARS);
         return;
     }
 
     bool executed = false;
-    for (size_t i = 0; i < m_Input.size(); i++)
+    for (std::size_t i = 0; i < m_Input.size(); i++)
     {
         // Find a place, where the command is separated from the args
         std::string command(m_Input, 0, i + 1);
@@ -525,16 +507,16 @@ void Prompt::parseCommand(void)
                 args.erase(args.begin());
 
             // Execute callabck with given args
-            printf("\n");
+            std::printf("\n");
             try
             {
                 m_AuxMenu.at(command)(args);
             }
             catch (const std::invalid_argument &e)
             {
-                printf("Error: Invalid argument. Input is not a valid number.\n");
+                std::printf("Error: Invalid argument. Input is not a valid number.\n");
             }
-            printf("\n");
+            std::printf("\n");
             executed = true;
 
             // Add good command to the command history
@@ -553,44 +535,44 @@ void Prompt::parseCommand(void)
 
             m_LongestCommand = getMaxCommandLength(m_CommandHistory);
 
-            m_HistoryIndex = -1;
+            m_historyIndex = -1;
             break;
         }
     }
 
     if (cnt == 0 && executed == false)
     {
-        fprintf(stderr, "Unknown command\n");
+        std::fprintf(stderr, "Unknown command\n");
     }
 
     m_Input.clear();
-    clear_line_back(50);
+    clearLineBack(50);
 }
 
-void Prompt::clear_line_fwd(size_t chars) const noexcept
+void Prompt::clearLineFwd(std::size_t chars) const noexcept
 {
-    for (size_t i = 0; i < chars; i++)
-        printf(" ");
-    for (size_t i = 0; i < chars; i++)
-        printf("\b");
+    for (std::size_t i = 0; i < chars; i++)
+        std::printf(" ");
+    for (std::size_t i = 0; i < chars; i++)
+        std::printf("\b");
 }
 
-void Prompt::clear_line_back(size_t chars) const noexcept
+void Prompt::clearLineBack(std::size_t chars) const noexcept
 {
-    for (size_t i = 0; i < chars; i++)
-        printf("\b");
-    for (size_t i = 0; i < chars; i++)
-        printf(" ");
-    for (size_t i = 0; i < chars; i++)
-        printf("\b");
+    for (std::size_t i = 0; i < chars; i++)
+        std::printf("\b");
+    for (std::size_t i = 0; i < chars; i++)
+        std::printf(" ");
+    for (std::size_t i = 0; i < chars; i++)
+        std::printf("\b");
 }
 
-size_t Prompt::countCharacterOccurrences(const std::string &input, char target) const
+std::size_t Prompt::countCharacterOccurrences(const std::string &input, char target) const
 {
     return std::count(input.begin(), input.end(), target);
 }
 
-std::string_view Prompt::getLastWord(const std::string_view &input) const
+std::string_view Prompt::getLastWord(std::string_view input) const
 {
     std::string_view trimmed = input;
 
@@ -601,20 +583,20 @@ std::string_view Prompt::getLastWord(const std::string_view &input) const
     }
 
     // Find the position of the last space
-    size_t last_space = trimmed.find_last_of(' ');
+    std::size_t lastSpace = trimmed.find_last_of(' ');
 
     // Return the substring after the last space
-    if (last_space == std::string_view::npos)
+    if (lastSpace == std::string_view::npos)
     {
         return trimmed; // No spaces found, return the whole trimmed string
     }
     else
     {
-        return trimmed.substr(last_space + 1);
+        return trimmed.substr(lastSpace + 1);
     }
 }
 
-size_t Prompt::countCommonPrefixLength(const std::vector<std::string_view> &stringSet) const
+std::size_t Prompt::countCommonPrefixLength(const std::vector<std::string_view> &stringSet) const
 {
     if (stringSet.empty())
     {
@@ -622,17 +604,17 @@ size_t Prompt::countCommonPrefixLength(const std::vector<std::string_view> &stri
     }
 
     // Take the first string as a reference to compare others
-    const std::string_view &firstString = *stringSet.begin();
+    const std::string_view firstString = *stringSet.begin();
 
     // Initialize the common prefix length to the length of the first string
-    size_t commonLength = firstString.length();
+    std::size_t commonLength = firstString.length();
 
     // Iterate through the set to compare each string
     for (const auto &str : stringSet)
     {
         // Find the common prefix length between the current string and the reference
-        size_t currentCommonLength = 0;
-        for (size_t i = 0; i < std::min(commonLength, str.length()); ++i)
+        std::size_t currentCommonLength = 0;
+        for (std::size_t i = 0; i < std::min(commonLength, str.length()); ++i)
         {
             if (firstString[i] == str[i])
             {
@@ -658,7 +640,7 @@ size_t Prompt::countCommonPrefixLength(const std::vector<std::string_view> &stri
 }
 
 template <typename T>
-void Prompt::add_unique(std::vector<T> &uniqueVector, T &element) const
+void Prompt::addUnique(std::vector<T> &uniqueVector, T &element) const
 {
     // Check if the value already exists in the vector
     if (std::find(uniqueVector.begin(), uniqueVector.end(), element) == uniqueVector.end())
@@ -667,9 +649,9 @@ void Prompt::add_unique(std::vector<T> &uniqueVector, T &element) const
     }
 }
 
-std::string_view Prompt::getNwords(const std::string &substr, const std::string_view &str) const
+std::string_view Prompt::getNwords(const std::string &substr, std::string_view str) const
 {
-    size_t index;
+    std::size_t index;
     for (index = substr.size(); index <= str.size(); index++)
     {
         if (str[index] == ' ')
@@ -688,7 +670,7 @@ std::string_view Prompt::getNwords(const std::string &substr, const std::string_
 
 int Prompt::tryMatch(void)
 {
-    int match_count = 0;
+    int matchCount = 0;
     std::vector<std::string_view> matches;
     matches.reserve(12);
 
@@ -698,13 +680,13 @@ int Prompt::tryMatch(void)
     {
         if (element.first.find(m_Input) == 0)
         {
-            match_count++;
+            matchCount++;
             std::string_view Nwords = getNwords(m_Input, element.first);
-            add_unique(matches, Nwords);
+            addUnique(matches, Nwords);
         }
     }
-    if (match_count)
-        printf("\n");
+    if (matchCount)
+        std::printf("\n");
 
     for (auto &element : matches)
     {
@@ -714,15 +696,15 @@ int Prompt::tryMatch(void)
     // There is only one matching candidate, so fill all other characters
     if (matches.size() == 1)
     {
-        std::string_view &sv = *(matches.begin());
+        std::string_view sv = *(matches.begin());
         m_Input = std::string(sv.substr(0, sv.size() - 1)); // skip passing \n to m_Input otherwise everything after will not be printed
 
         if (m_Input.back() != ' ')
             m_Input = m_Input + " ";
-        return match_count;
+        return matchCount;
     }
 
-    const std::string_view &refStr = *(matches.begin());
+    const std::string_view refStr = *(matches.begin());
 
     // Determine if next chars are all the same so we could complete them
     auto num = countCommonPrefixLength(matches);
@@ -730,39 +712,39 @@ int Prompt::tryMatch(void)
     if (num)
         m_Input = refStr.substr(0, num); // dummy line
 
-    return match_count;
+    return matchCount;
 }
 
 void Prompt::print(void) noexcept
 {
     // Print only when content is changed, otherwise skip.
     // Skip printing while entering special chars like \x1b
-    if (m_SpecialCharacterState == true || m_oldInput == m_Input)
+    if (m_specialCharacterState == true || m_oldInput == m_Input)
         return;
 
 #if DEBUG
 #ifdef UNIX
     if (m_Prefix.empty() == true)
-        printf("\r%s[%s][%u]%s > %s", CYAN_COLOR, m_Name.c_str(), alloc_count, DEFAULT_COLOR, m_Input.c_str());
+        std::printf("\r%s[%s][%u]%s > %s", CYAN_COLOR, m_Name.c_str(), alloc_count, DEFAULT_COLOR, m_Input.c_str());
     else
-        printf("\r%s[%s][%u] %s/%s%s > %s", CYAN_COLOR, m_Name.c_str(), alloc_count, GREEN_COLOR, m_Prefix.c_str(), DEFAULT_COLOR, m_Input.c_str());
+        std::printf("\r%s[%s][%u] %s/%s%s > %s", CYAN_COLOR, m_Name.c_str(), alloc_count, GREEN_COLOR, m_Prefix.c_str(), DEFAULT_COLOR, m_Input.c_str());
 #else
     if (m_Prefix.empty() == true)
-        printf("\r[%s][%u] > %s", m_Name.c_str(), alloc_count, m_Input.c_str());
+        std::printf("\r[%s][%u] > %s", m_Name.c_str(), alloc_count, m_Input.c_str());
     else
-        printf("\r[%s][%u] %s / > %s", m_Name.c_str(), alloc_count, m_Prefix.c_str(), m_Input.c_str());
+        std::printf("\r[%s][%u] %s / > %s", m_Name.c_str(), alloc_count, m_Prefix.c_str(), m_Input.c_str());
 #endif
 #else
 #ifdef UNIX
     if (m_Prefix.empty() == true)
-        printf("\r%s[%s]%s > %s", CYAN_COLOR, m_Name.c_str(), DEFAULT_COLOR, m_Input.c_str());
+        std::printf("\r%s[%s]%s > %s", CYAN_COLOR, m_Name.c_str(), DEFAULT_COLOR, m_Input.c_str());
     else
-        printf("\r%s[%s] %s/%s%s > %s", CYAN_COLOR, m_Name.c_str(), GREEN_COLOR, m_Prefix.c_str(), DEFAULT_COLOR, m_Input.c_str());
+        std::printf("\r%s[%s] %s/%s%s > %s", CYAN_COLOR, m_Name.c_str(), GREEN_COLOR, m_Prefix.c_str(), DEFAULT_COLOR, m_Input.c_str());
 #else
     if (m_Prefix.empty() == true)
-        printf("\r[%s] > %s", m_Name.c_str(), m_Input.c_str());
+        std::printf("\r[%s] > %s", m_Name.c_str(), m_Input.c_str());
     else
-        printf("\r[%s] %s / > %s", m_Name.c_str(), m_Prefix.c_str(), m_Input.c_str());
+        std::printf("\r[%s] %s / > %s", m_Name.c_str(), m_Prefix.c_str(), m_Input.c_str());
 #endif
 #endif
 
@@ -772,7 +754,7 @@ void Prompt::print(void) noexcept
 
 void Prompt::attachFnKeyCallback(FnKey key, const std::function<void()> &cb)
 {
-    if (static_cast<size_t>(key) < m_FnKeyCallback.size())
+    if (static_cast<std::size_t>(key) < m_FnKeyCallback.size())
         m_FnKeyCallback[static_cast<int>(key)] = cb;
     else
         throw std::out_of_range("Invalid index for FnKey");
@@ -783,7 +765,7 @@ void Prompt::updateAuxMenu(const std::string &prefix)
 {
     m_AuxMenu.clear();
     m_CommandHistory.clear();
-    m_HistoryIndex = -1;
+    m_historyIndex = -1;
 
     if (prefix.size() == 0)
     {
@@ -812,7 +794,12 @@ void Prompt::updateAuxMenu(const std::string &prefix)
         m_Prefix.erase(m_Prefix.begin());
 }
 
-void Prompt::insertMenuItem(std::string &str, Callback cb)
+void Prompt::insertMenuItem(const std::string &str, const Callback &cb)
 {
-    m_MainMenu.emplace(std::move(str), cb);
+    m_MainMenu.insert({str, cb});
+}
+
+void Prompt::emplaceMenuItem(std::string &&str, Callback &&cb)
+{
+    m_MainMenu.emplace(std::move(str), std::move(cb));
 }

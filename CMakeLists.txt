@@ -13,11 +13,16 @@ add_executable(cli
     src/Prompt.cpp
 )
 
-# Include directories for header files
-target_include_directories(cli PUBLIC "${PROJECT_SOURCE_DIR}/src")
-target_include_directories(${PROJECT_NAME} PRIVATE
-    "inc"
-)
+# Define Debug and Release specific compile options
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    message("Configuring Debug Build")
+    add_compile_definitions(DEBUG)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O0")
+elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
+    message("Configuring Release Build")
+    add_compile_definitions(RELEASE)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2 -DNDEBUG")
+endif()
 
 target_compile_options(cli PRIVATE
     -Wall

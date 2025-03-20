@@ -39,15 +39,16 @@ namespace cli
     class Prompt
     {
     public:
-        Prompt(const std::string &name);
+        Prompt(std::string_view name);
 
         Prompt(const Prompt &other) = delete;
         Prompt(Prompt &&other) = delete;
         Prompt &operator=(const Prompt &) = delete;
         Prompt &operator=(Prompt &&) = delete;
 
-        void Run(void);
-        void insertMenuItem(std::string &str, Callback cb);
+        void run(void);
+        void insertMenuItem(const std::string &str, const Callback &cb);
+        void emplaceMenuItem(std::string &&str, Callback &&cb);
         void attachFnKeyCallback(FnKey key, const std::function<void()> &cb);
 
     private:
@@ -55,14 +56,14 @@ namespace cli
         std::map<std::string_view, Callback> m_AuxMenu;
         std::array<std::function<void()>, static_cast<int>(FnKey::F12) + 1> m_FnKeyCallback;
 
-        bool m_SpecialCharacterState;
+        bool m_specialCharacterState;
         std::string m_Input;
         std::string m_Prefix;
         std::string m_Name;
         Tokens m_CommandHistory;
-        int m_HistoryIndex;
+        int m_historyIndex;
         std::string m_oldInput;
-        size_t m_LongestCommand;
+        std::size_t m_LongestCommand;
 
         void handleKey(void);
         bool backspace(void);
@@ -71,18 +72,18 @@ namespace cli
         void parseCommand(void);
 
         template <typename T>
-        void add_unique(std::vector<T> &uniqueVector, T &element) const;
-        std::string_view getNwords(const std::string &substr, const std::string_view &str) const;
-        size_t getMaxCommandLength(const std::vector<std::string> &commands) const;
+        void addUnique(std::vector<T> &uniqueVector, T &element) const;
+        std::string_view getNwords(const std::string &substr, std::string_view str) const;
+        std::size_t getMaxCommandLength(const std::vector<std::string> &commands) const;
         void setNonCanonicalMode(void) const noexcept;
-        void updateAuxMenu(const std::string &prefix);
+        void updateAuxMenu(const std::string &prefix = {});
         bool handleSpecialCharacters(void);
         void removeLastWord(std::string &str) const;
-        size_t countCommonPrefixLength(const std::vector<std::string_view> &stringSet) const;
-        size_t countCharacterOccurrences(const std::string &input, char target) const;
-        std::string_view getLastWord(const std::string_view &input) const;
-        void clear_line_back(size_t chars) const noexcept;
-        void clear_line_fwd(size_t chars) const noexcept;
+        std::size_t countCommonPrefixLength(const std::vector<std::string_view> &stringSet) const;
+        std::size_t countCharacterOccurrences(const std::string &input, char target) const;
+        std::string_view getLastWord(std::string_view input) const;
+        void clearLineBack(std::size_t chars) const noexcept;
+        void clearLineFwd(std::size_t chars) const noexcept;
         void debug(void) const noexcept;
     };
 }
