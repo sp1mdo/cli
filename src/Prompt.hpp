@@ -70,17 +70,15 @@ namespace cli
         int tryMatch(void);
         void parseCommand(void);
 
-        template <typename T>
-        void add_unique(std::vector<T> &uniqueVector, T &element) const;
-        std::string_view getNwords(const std::string &substr, const std::string_view &str) const;
+        std::string_view getNwords(const std::string &substr, std::string_view str) const;
         size_t getMaxCommandLength(const std::vector<std::string> &commands) const;
         void setNonCanonicalMode(void) const noexcept;
         void updateAuxMenu(const std::string &prefix);
         bool handleSpecialCharacters(void);
         void removeLastWord(std::string &str) const;
-        size_t countCommonPrefixLength(const std::vector<std::string_view> &stringSet) const;
+        size_t countCommonPrefixLength(const std::set<std::string_view> &stringSet) const;
         size_t countCharacterOccurrences(const std::string &input, char target) const;
-        std::string_view getLastWord(const std::string_view &input) const;
+        std::string_view getLastWord(std::string_view input) const;
         void clear_line_back(size_t chars) const noexcept;
         void clear_line_fwd(size_t chars) const noexcept;
         void debug(void) const noexcept;

@@ -3,6 +3,7 @@
 #include <vector>
 #include <algorithm>
 #include <iostream>
+#include <set>
 #include <cstdint>
 #include "Prompt.hpp"
 
@@ -285,7 +286,7 @@ void Prompt::removeLastWord(std::string &str) const
 }
 
 template <typename... Args>
-bool containsAny(const std::string_view &str, const Args &...substrs)
+bool containsAny(std::string_view str, const Args &...substrs)
 {
     return ((str.find(substrs) != std::string::npos) || ...);
 }
@@ -590,7 +591,7 @@ size_t Prompt::countCharacterOccurrences(const std::string &input, char target) 
     return std::count(input.begin(), input.end(), target);
 }
 
-std::string_view Prompt::getLastWord(const std::string_view &input) const
+std::string_view Prompt::getLastWord(std::string_view input) const
 {
     std::string_view trimmed = input;
 
@@ -614,7 +615,7 @@ std::string_view Prompt::getLastWord(const std::string_view &input) const
     }
 }
 
-size_t Prompt::countCommonPrefixLength(const std::vector<std::string_view> &stringSet) const
+size_t Prompt::countCommonPrefixLength(const std::set<std::string_view> &stringSet) const
 {
     if (stringSet.empty())
     {
@@ -622,7 +623,7 @@ size_t Prompt::countCommonPrefixLength(const std::vector<std::string_view> &stri
     }
 
     // Take the first string as a reference to compare others
-    const std::string_view &firstString = *stringSet.begin();
+    std::string_view firstString = *stringSet.begin();
 
     // Initialize the common prefix length to the length of the first string
     size_t commonLength = firstString.length();
@@ -657,17 +658,7 @@ size_t Prompt::countCommonPrefixLength(const std::vector<std::string_view> &stri
     return commonLength;
 }
 
-template <typename T>
-void Prompt::add_unique(std::vector<T> &uniqueVector, T &element) const
-{
-    // Check if the value already exists in the vector
-    if (std::find(uniqueVector.begin(), uniqueVector.end(), element) == uniqueVector.end())
-    {
-        uniqueVector.emplace_back((element));
-    }
-}
-
-std::string_view Prompt::getNwords(const std::string &substr, const std::string_view &str) const
+std::string_view Prompt::getNwords(const std::string &substr, std::string_view str) const
 {
     size_t index;
     for (index = substr.size(); index <= str.size(); index++)
@@ -689,8 +680,7 @@ std::string_view Prompt::getNwords(const std::string &substr, const std::string_
 int Prompt::tryMatch(void)
 {
     int match_count = 0;
-    std::vector<std::string_view> matches;
-    matches.reserve(12);
+    std::set<std::string_view> matches;
 
     // Make auxiliary list of strings that matches the input,
     // and will be displayed after pressing TAB
@@ -700,7 +690,7 @@ int Prompt::tryMatch(void)
         {
             match_count++;
             std::string_view Nwords = getNwords(m_Input, element.first);
-            add_unique(matches, Nwords);
+            matches.emplace(Nwords);
         }
     }
     if (match_count)
@@ -714,7 +704,7 @@ int Prompt::tryMatch(void)
     // There is only one matching candidate, so fill all other characters
     if (matches.size() == 1)
     {
-        std::string_view &sv = *(matches.begin());
+        std::string_view sv = *(matches.begin());
         m_Input = std::string(sv.substr(0, sv.size() - 1)); // skip passing \n to m_Input otherwise everything after will not be printed
 
         if (m_Input.back() != ' ')
@@ -722,7 +712,7 @@ int Prompt::tryMatch(void)
         return match_count;
     }
 
-    const std::string_view &refStr = *(matches.begin());
+    std::string_view refStr = *(matches.begin());
 
     // Determine if next chars are all the same so we could complete them
     auto num = countCommonPrefixLength(matches);
