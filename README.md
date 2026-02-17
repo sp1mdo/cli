@@ -57,4 +57,8 @@ where cities.txt is just a file with set of lines made with below pattern : [con
 
 So similarily using Prompt::insertMenuItem() you can easiy create your own menu structure, where each command that contains a set of words, has corresponding function callback attached to it.
 
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
 

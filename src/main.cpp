@@ -1,15 +1,12 @@
-#include <stdio.h>
-#include <string>
-#include <vector>
-#include <functional>
-#include <iostream>
-#include <algorithm>
-#include <fstream>
-#include <set>
-#include <cstring>
-#include <map>
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2024 sp1mdo
 
-#include "Prompt.hpp"
+#include <iostream>
+#include <fstream>
+
+#include "cli.hpp"
+
+using namespace cli;
 
 void callback(int id, const std::string &str)
 {
@@ -20,8 +17,6 @@ void special_function(int key)
 {
     std::cout << "Pressed F" << key+1 << std::endl;
 }
-
-using namespace cli;
 
 int main(int argc, char **argv)
 {
@@ -37,8 +32,8 @@ int main(int argc, char **argv)
     // Check if the file was successfully opened
     if (!file.is_open())
     {
-        std::cerr << "Failed to open the file." << std::endl;
-        return 1;
+        std::cout << "Failed to open the file.\n";
+        std::abort();
     }
     int fun_id = 0;
     std::string line;
